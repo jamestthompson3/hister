@@ -179,14 +179,14 @@ var reindexCmd = &cobra.Command{
 	Short: "Reindex",
 	Long:  `Recreate index - server should be stopped`,
 	PreRun: func(_ *cobra.Command, _ []string) {
-		initIndex()
+		initDB()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		skipSensitive := false
 		if b, err := cmd.Flags().GetBool("exclude-sensitive"); err == nil {
 			skipSensitive = b
 		}
-		err := indexer.Reindex(cfg.IndexPath(), cfg.FullPath("tmp_index.db"), cfg.Rules, skipSensitive)
+		err := indexer.Reindex(cfg.FullPath(""), cfg.Rules, skipSensitive)
 		if err != nil {
 			exit(1, "Indexer error: "+err.Error())
 		}

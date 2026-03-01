@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -16,7 +17,9 @@ import (
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/v2/analysis/token/lowercase"
 	"github.com/blevesearch/bleve/v2/analysis/tokenizer/single"
+	"github.com/blevesearch/bleve/v2/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/blevesearch/bleve/v2/registry"
 	"github.com/blevesearch/bleve/v2/search"
@@ -29,11 +32,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var Version = 1
+var Version = 2
 
 type indexer struct {
-	idx bleve.Index
+	idx      bleve.IndexAlias       // used only for Search()
+	indexers map[string]bleve.Index // default and language specific indexers
+	dir      string
 }
+
+const defaultIndexerName = "index.db"
+const langIndexerName = "index_%s.db"
 
 type Query struct {
 	Text      string `json:"text"`
@@ -71,36 +79,74 @@ func Init(cfg *config.Config) error {
 		sp = append(sp, v)
 	}
 	sensitiveContentRe = regexp.MustCompile(fmt.Sprintf("(%s)", strings.Join(sp, "|")))
-	idx, err := bleve.OpenUsing(cfg.IndexPath(), bleveConfig)
+	var err error
+	i, err = initializeIndexer(cfg.FullPath(""))
 	if err != nil {
-		if err.Error() == "timeout" {
-			return errors.New("cannot open index: index is already opened - close other Hister instances and try again")
-		}
-		mapping := createMapping()
-		idx, err = bleve.New(cfg.IndexPath(), mapping)
-		if err != nil {
-			return err
-		}
-	}
-	i = &indexer{
-		idx: idx,
+		return err
 	}
 	registry.RegisterHighlighter("ansi", invertedAnsiHighlighter)
 	registry.RegisterHighlighter("tui", tuiHighlighter)
 	return nil
 }
 
+func initializeIndexer(basePath string) (*indexer, error) {
+	if _, err := os.Stat(basePath); errors.Is(err, os.ErrNotExist) {
+		if err := os.MkdirAll(basePath, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
+	idxPath := filepath.Join(basePath, defaultIndexerName)
+	idx, err := bleve.OpenUsing(idxPath, bleveConfig)
+	if err != nil {
+		if err.Error() == "timeout" {
+			return nil, errors.New("cannot open index: index is already opened - close other Hister instances and try again")
+		}
+		mapping := createMapping("default")
+		idx, err = bleve.New(idxPath, mapping)
+		if err != nil {
+			return nil, err
+		}
+	}
+	idx.SetName(defaultIndexerName)
+	i = &indexer{
+		idx: bleve.NewIndexAlias(idx),
+		indexers: map[string]bleve.Index{
+			defaultIndexerName: idx,
+		},
+		dir: basePath,
+	}
+	entries, err := os.ReadDir(basePath)
+	if err != nil {
+		return nil, err
+	}
+	for _, e := range entries {
+		fn := e.Name()
+		// TODO do more precise name check
+		if !strings.HasPrefix(fn, "index_") || !strings.HasSuffix(fn, ".db") {
+			continue
+		}
+		langIdx, err := bleve.OpenUsing(filepath.Join(basePath, fn), bleveConfig)
+		if err != nil {
+			return nil, err
+		}
+		langIdx.SetName(fn)
+		i.idx.Add(langIdx)
+		i.indexers[fn] = langIdx
+	}
+	return i, nil
+}
+
 func init() {
 	sanitizer = bluemonday.StrictPolicy()
 }
 
-func Reindex(idxPath, tmpIdxPath string, rules *config.Rules, skipSensitiveChecks bool) error {
-	idx, err := bleve.OpenUsing(idxPath, bleveConfig)
+func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) error {
+	idx, err := initializeIndexer(basePath)
 	if err != nil {
 		return err
 	}
-	mapping := createMapping()
-	tmpIdx, err := bleve.New(tmpIdxPath, mapping)
+	tmpBasePath := filepath.Join(basePath, "reindex")
+	tmpIdx, err := initializeIndexer(tmpBasePath)
 	if err != nil {
 		return err
 	}
@@ -112,7 +158,7 @@ func Reindex(idxPath, tmpIdxPath string, rules *config.Rules, skipSensitiveCheck
 		req.Size = resultNum
 		req.From = page * resultNum
 		req.Fields = allFields
-		res, err := idx.Search(req)
+		res, err := idx.idx.Search(req)
 		if err != nil || len(res.Hits) < 1 {
 			break
 		}
@@ -129,7 +175,7 @@ func Reindex(idxPath, tmpIdxPath string, rules *config.Rules, skipSensitiveCheck
 					continue
 				} else {
 					tmpIdx.Close()
-					os.RemoveAll(tmpIdxPath)
+					os.RemoveAll(tmpBasePath)
 					return err
 				}
 			}
@@ -137,10 +183,9 @@ func Reindex(idxPath, tmpIdxPath string, rules *config.Rules, skipSensitiveCheck
 				log.Info().Str("URL", d.URL).Msg("Dropping URL that has since been added to skip rules.")
 				continue
 			}
-			// priority/score are updated implicitly by bleve
-			if err := tmpIdx.Index(d.URL, d); err != nil {
+			if err := tmpIdx.AddDocument(d); err != nil {
 				tmpIdx.Close()
-				os.RemoveAll(tmpIdxPath)
+				os.RemoveAll(tmpBasePath)
 				return err
 			}
 		}
@@ -149,10 +194,24 @@ func Reindex(idxPath, tmpIdxPath string, rules *config.Rules, skipSensitiveCheck
 	}
 	idx.Close()
 	tmpIdx.Close()
-	if err := os.RemoveAll(idxPath); err != nil {
-		return nil
+	for n, _ := range idx.indexers {
+		idxPath := filepath.Join(basePath, n)
+		if err := os.RemoveAll(idxPath); err != nil {
+			return err
+		}
 	}
-	return os.Rename(tmpIdxPath, idxPath)
+	var renameError error
+	for n, _ := range tmpIdx.indexers {
+		idxPath := filepath.Join(basePath, n)
+		tmpIdxPath := filepath.Join(tmpBasePath, n)
+		if err := os.Rename(tmpIdxPath, idxPath); err != nil {
+			renameError = err
+		}
+	}
+	if renameError != nil {
+		return errors.New("failed to rename tmp indexes during the reindex, resolve the issue manually")
+	}
+	return os.RemoveAll(tmpBasePath)
 }
 
 func DocumentCount() uint64 {
@@ -167,16 +226,55 @@ func DocumentCount() uint64 {
 }
 
 func Add(d *Document) error {
+	return i.AddDocument(d)
+}
+
+func (i *indexer) AddDocument(d *Document) error {
 	if !d.processed {
 		if err := d.Process(); err != nil {
 			return err
 		}
 	}
-	return i.idx.Index(d.URL, d)
+	if d.Language == UnknownLanguage || d.Language == "" {
+		return i.indexers[defaultIndexerName].Index(d.URL, d)
+	}
+	idxName := fmt.Sprintf(langIndexerName, d.Language)
+	idx, ok := i.indexers[idxName]
+	if !ok {
+		err := i.addIndexer(idxName, d.Language)
+		if err != nil {
+			log.Warn().Err(err).Str("Name", idxName).Msg("Failed to create language indexer")
+			return i.indexers[defaultIndexerName].Index(d.URL, d)
+		}
+		idx, _ = i.indexers[idxName]
+	}
+	return idx.Index(d.URL, d)
+}
+
+func (i *indexer) addIndexer(name, lang string) error {
+	mapping := createMapping(lang)
+	idx, err := bleve.New(filepath.Join(i.dir, name), mapping)
+	if err != nil {
+		return err
+	}
+	idx.SetName(name)
+	i.indexers[name] = idx
+	return nil
+}
+
+func (i *indexer) Close() {
+	for _, idx := range i.indexers {
+		idx.Close()
+	}
 }
 
 func Delete(u string) error {
-	return i.idx.Delete(u)
+	for _, idx := range i.indexers {
+		if err := idx.Delete(u); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func Search(cfg *config.Config, q *Query) (*Results, error) {
@@ -326,22 +424,41 @@ func (q *Query) create() query.Query {
 	return sq
 }
 
-func createMapping() mapping.IndexMapping {
+func createMapping(lang string) mapping.IndexMapping {
 	im := bleve.NewIndexMapping()
-	im.AddCustomAnalyzer("url", map[string]any{
+	textAnalyzer := lang
+	if lang == UnknownLanguage || lang == "" || lang == "default" {
+		err := im.AddCustomAnalyzer("default", map[string]any{
+			"type":         custom.Name,
+			"char_filters": []string{},
+			"tokenizer":    unicode.Name,
+			"token_filters": []string{
+				lowercase.Name,
+			},
+		})
+		if err != nil {
+			panic(err)
+		}
+		textAnalyzer = "default"
+	}
+	err := im.AddCustomAnalyzer("url", map[string]any{
 		"type":         custom.Name,
 		"char_filters": []string{},
 		"tokenizer":    single.Name,
 		"token_filters": []string{
-			"to_lower",
+			lowercase.Name,
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	fm := bleve.NewTextFieldMapping()
 	fm.Store = true
 	fm.Index = true
 	fm.IncludeTermVectors = true
 	fm.IncludeInAll = true
+	fm.Analyzer = textAnalyzer
 
 	um := bleve.NewTextFieldMapping()
 	um.Analyzer = "url"
@@ -351,9 +468,10 @@ func createMapping() mapping.IndexMapping {
 
 	docMapping := bleve.NewDocumentMapping()
 	docMapping.AddFieldMappingsAt("title", fm)
+	docMapping.AddFieldMappingsAt("text", fm)
 	docMapping.AddFieldMappingsAt("url", um)
 	docMapping.AddFieldMappingsAt("domain", um)
-	docMapping.AddFieldMappingsAt("text", fm)
+	docMapping.AddFieldMappingsAt("language", um)
 	docMapping.AddFieldMappingsAt("favicon", noIdxMap)
 	docMapping.AddFieldMappingsAt("html", noIdxMap)
 	docMapping.AddFieldMappingsAt("added", bleve.NewNumericFieldMapping())

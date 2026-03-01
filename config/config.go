@@ -470,10 +470,6 @@ func (c *Config) FullPath(f string) string {
 	return filepath.Join(c.App.Directory, f)
 }
 
-func (c *Config) IndexPath() string {
-	return c.FullPath("index.db")
-}
-
 func (c *Config) RulesPath() string {
 	return c.FullPath("rules.json")
 }

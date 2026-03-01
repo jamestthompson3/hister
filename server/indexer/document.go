@@ -112,7 +112,7 @@ func (d *Document) Process() error {
 	if err != nil {
 		d.Language = UnknownLanguage
 	} else {
-		d.Language = lang.IsoCode639_1().String()
+		d.Language = strings.ToLower(lang.IsoCode639_1().String())
 	}
 
 	d.processed = true

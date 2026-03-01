@@ -3,6 +3,35 @@ package indexer
 import (
 	"errors"
 
+	// register bleve language analyzers
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/ar"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/bg"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/ca"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/cs"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/da"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/de"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/el"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/en"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/es"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/eu"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/fa"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/fi"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/fr"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/ga"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/hi"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/hr"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/hu"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/hy"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/id"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/it"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/nl"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/pl"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/pt"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/ro"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/ru"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/sv"
+	_ "github.com/blevesearch/bleve/v2/analysis/lang/tr"
+
 	"github.com/pemistahl/lingua-go"
 )
 
