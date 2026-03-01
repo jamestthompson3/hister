@@ -173,7 +173,7 @@
   --font-outfit: 'Outfit', sans-serif;
   --font-inter: 'Inter', sans-serif;
   --font-fira: 'Fira Code', monospace;
-  --font-space: 'Space Grotesk', sans-serif;
+  --font-space: var(--font-outfit);
 }
 
 @layer base {
