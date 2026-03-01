@@ -166,6 +166,7 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 			d := docFromHit(h)
 			log.Debug().Str("URL", d.URL).Msg("Indexing")
 			d.skipSensitiveCheck = skipSensitiveChecks
+			origDate := d.Added
 			if err := d.Process(); err != nil {
 				if errors.Is(err, ErrSensitiveContent) {
 					log.Warn().Err(err).Str("URL", d.URL).Msg("Skipping document, sensitive content")
@@ -183,6 +184,7 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 				log.Info().Str("URL", d.URL).Msg("Dropping URL that has since been added to skip rules.")
 				continue
 			}
+			d.Added = origDate
 			if err := tmpIdx.AddDocument(d); err != nil {
 				tmpIdx.Close()
 				os.RemoveAll(tmpBasePath)
