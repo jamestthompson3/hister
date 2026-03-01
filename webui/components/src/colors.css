@@ -44,6 +44,12 @@
   --hister-rose: #c06070;
   --hister-cyan: #2478ab;
   --hister-lime: #80a050;
+  --brutal-bg: #FFFDF7;
+  --brutal-border: #1A1A1A;
+  --brutal-card: #FFFFFF;
+  --brutal-shadow: #1A1A1A;
+  --text-primary: #333333;
+  --text-secondary: #666666;
   --page-bg: #f0f0f0;
   --card-surface: #f5f5f5;
   --text-primary-brand: #333333;
@@ -93,6 +99,12 @@
   --hister-rose: #D47B8B;
   --hister-cyan: #74b9ff;
   --hister-lime: #A0C070;
+  --brutal-bg: #1A1A2E;
+  --brutal-border: #2D2D48;
+  --brutal-card: #252540;
+  --brutal-shadow: #0F0F1A;
+  --text-primary: #F0EDE8;
+  --text-secondary: #A8A29E;
   --page-bg: #1A1A2E;
   --card-surface: #1A1A2E;
   --text-primary-brand: #F0EDE8;
@@ -154,10 +166,14 @@
   --color-muted-surface: var(--muted-surface);
   --color-border-brand: var(--border-brand);
   --color-border-brand-muted: var(--border-muted-brand);
+  --color-brutal-bg: var(--brutal-bg);
+  --color-brutal-border: var(--brutal-border);
+  --color-brutal-card: var(--brutal-card);
+  --color-brutal-shadow: var(--brutal-shadow);
   --font-outfit: 'Outfit', sans-serif;
   --font-inter: 'Inter', sans-serif;
   --font-fira: 'Fira Code', monospace;
-  --font-space: 'Space Grotesk', sans-serif;
+  --font-space: var(--font-outfit);
 }
 
 @layer base {

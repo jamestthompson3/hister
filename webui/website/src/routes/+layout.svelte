@@ -1,24 +1,23 @@
 <script lang="ts">
-  import '@hister/components/style.css';
+  import '../app.css';
+  import { afterNavigate } from '$app/navigation';
+  import Header from '$lib/Header.svelte';
+  import Footer from '$lib/Footer.svelte';
+
   let { children } = $props();
+
+  afterNavigate(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  });
 </script>
 
-<nav>
-  <a href="/">Home</a>
-  <a href="/docs">Documentation</a>
-  <a href="/posts">Posts</a>
-</nav>
-
-<div class="container">
-  <main>
+<div class="min-h-screen flex flex-col bg-brutal-bg">
+  <Header />
+  <main class="flex-1">
     {@render children()}
   </main>
+  <Footer />
 </div>
-
-<footer>
-  <div>
-    <a href="https://github.com/asciimoo/hister">GitHub</a> &bull; 
-    <a href="https://codeberg.org/asciimoo/hister">Codeberg</a>
-  </div>
-  <div style="margin-top: 10px; font-size: 0.9rem;">AGPLv3</div>
-</footer>

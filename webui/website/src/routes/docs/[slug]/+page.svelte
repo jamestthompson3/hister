@@ -3,10 +3,10 @@
 </script>
 
 <svelte:head>
-  <title>{data.meta.title} | Hister - Documentation</title>
+  <title>{data.meta.title} | Hister Documentation</title>
 </svelte:head>
 
-<main>
+<div class="content">
   <h1>{data.meta.title}</h1>
   <data.content />
-</main>
+</div>

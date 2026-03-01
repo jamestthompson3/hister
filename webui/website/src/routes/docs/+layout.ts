@@ -1,4 +1,4 @@
-const modules = import.meta.glob('../../../docs/*.md', { eager: true });
+const modules = import.meta.glob('../../content/docs/*.md', { eager: true });
 
 export async function load() {
   const docs = Object.entries(modules).map(([path, mod]) => {

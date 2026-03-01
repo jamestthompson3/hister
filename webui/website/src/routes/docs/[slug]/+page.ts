@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 
 export const prerender = true;
 
-const modules = import.meta.glob('../../../../docs/*.md', { eager: true });
+const modules = import.meta.glob('../../../content/docs/*.md', { eager: true });
 
 const docs = Object.fromEntries(
   Object.entries(modules).map(([path, mod]) => {
