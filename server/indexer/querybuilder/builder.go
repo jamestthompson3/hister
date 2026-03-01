@@ -51,9 +51,11 @@ func getTokenQuery(t Token) (query.Query, bool) {
 			negated = true
 			v = v[1:]
 		}
-		titleq := bleve.NewPhraseQuery(strings.Fields(v), "title")
+		titleq := bleve.NewMatchPhraseQuery(v)
+		titleq.SetField("title")
 		titleq.SetBoost(weights["title"])
-		textq := bleve.NewPhraseQuery(strings.Fields(v), "text")
+		textq := bleve.NewMatchPhraseQuery(v)
+		textq.SetField("text")
 		textq.SetBoost(weights["text"])
 		return bleve.NewDisjunctionQuery(titleq, textq), negated
 	case TokenWord:
