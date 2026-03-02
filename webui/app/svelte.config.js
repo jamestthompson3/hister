@@ -1,8 +1,13 @@
 import adapter from '@sveltejs/adapter-static';
 
+const baseDir = process.env.BASE_PATH || '';
+
 /** @type {import('@sveltejs/kit').Config} */
 export default {
   kit: {
+    paths: {
+      base: baseDir,
+    },
     adapter: adapter({
       pages: 'build',
       assets: 'build',
