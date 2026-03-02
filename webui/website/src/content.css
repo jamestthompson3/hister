@@ -59,8 +59,16 @@
   margin-bottom: 0.5em;
 }
 
-.content li::marker {
+.content ul {
+  list-style-type: disc;
+}
+
+.content ul li::marker {
   color: var(--hister-indigo);
+}
+
+.content ol {
+  list-style-type: decimal;
 }
 
 .content strong {
