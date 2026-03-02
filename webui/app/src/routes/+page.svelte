@@ -621,7 +621,7 @@
         {#if lastResults?.history?.length}
           {#each lastResults.history as r, i}
             {@const favSrc = getFaviconSrc(r.favicon, r.url)}
-            <article data-result class="flex gap-3 py-3.5 border-b-[3px] border-brutal-border w-full overflow-hidden transition-all duration-150"
+            <article data-result class="flex gap-3 py-3.5 w-full overflow-hidden transition-all duration-150"
               style={i === highlightIdx ? 'background: linear-gradient(90deg, transparent, rgba(90, 138, 138, 0.12), transparent); border-left: 3px solid var(--hister-teal); padding-left: 0.75rem;' : ''}>
               <div class="w-5 h-5 shrink-0 flex items-center justify-center mt-0.5 overflow-hidden bg-hister-teal">
                 {#if favSrc}
@@ -673,7 +673,7 @@
             {@const idx = historyLen + i}
             {@const color = "hister-cyan" }
             {@const favSrc = getFaviconSrc(r.favicon, r.url)}
-            <article data-result class="flex gap-3 py-3.5 border-b-[3px] border-brutal-border w-full overflow-hidden transition-all duration-150"
+            <article data-result class="flex gap-3 py-3.5 w-full overflow-hidden transition-all duration-150"
               style={idx === highlightIdx ? `background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--${color}) 12%, transparent), transparent); border-left: 3px solid var(--${color}); padding-left: 0.75rem;` : ''}>
               <div class="w-5 h-5 shrink-0 flex items-center justify-center mt-0.5 overflow-hidden" style="background-color: var(--{color});">
                 {#if favSrc}
