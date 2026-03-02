@@ -52,10 +52,10 @@
     {:else}
       <div class="space-y-4">
         {#each endpoints as ep}
-          <Card.Root class="bg-card-surface border-[3px] border-brutal-border rounded-none py-0 gap-0 overflow-hidden shadow-[4px_4px_0_var(--brutal-shadow)]">
+          <Card.Root class="bg-card-surface rounded-none border border-black py-0 gap-0 overflow-hidden shadow-[4px_4px_0_var(--brutal-shadow)]">
             <Card.Header class="px-4 py-3 gap-1">
               <div class="flex items-center gap-2.5 flex-wrap">
-                <Card.Title class="font-outfit text-base font-extrabold text-text-brand">{ep.name}</Card.Title>
+                <Card.Title class="font-outfit text-base md:text-xl font-bold text-text-brand">{ep.name}</Card.Title>
                 <Badge
                   variant="default"
                   class="text-[11px] font-bold px-2 py-0 border-0 leading-5 {ep.method === 'GET' ? 'bg-hister-teal text-white' : 'bg-hister-coral text-white'}"
@@ -73,12 +73,12 @@
             </Card.Header>
 
             {#if ep.args && ep.args.length > 0}
-              <Card.Content class="px-4 py-3 border-t-[3px] border-brutal-border">
+              <Card.Content class="px-4 py-3 border-t-[1px]">
                 <h4 class="font-outfit text-xs font-bold text-text-brand-muted uppercase tracking-wider mb-2">Arguments</h4>
                 <div class="hidden md:block">
                   <Table.Root>
                     <Table.Header>
-                      <Table.Row class="bg-muted-surface border-b-[2px] border-brutal-border hover:bg-muted-surface">
+                      <Table.Row class="bg-muted-surface border-b-[1px] border-brutal-border hover:bg-muted-surface">
                         <Table.Head class="font-inter text-xs font-bold text-text-brand-muted px-3 py-2 h-auto">Name</Table.Head>
                         <Table.Head class="font-inter text-xs font-bold text-text-brand-muted px-3 py-2 h-auto">Type</Table.Head>
                         <Table.Head class="font-inter text-xs font-bold text-text-brand-muted px-3 py-2 h-auto">Required</Table.Head>
@@ -119,7 +119,7 @@
                 </div>
               </Card.Content>
             {:else}
-              <Card.Content class="px-4 py-3 border-t-[3px] border-brutal-border">
+              <Card.Content class="px-4 py-3 border-t-[1px] border-brutal-border">
                 <p class="font-inter text-xs text-text-brand-muted">No arguments</p>
               </Card.Content>
             {/if}
