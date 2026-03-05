@@ -496,24 +496,27 @@ func importHistory(cmd *cobra.Command, args []string) {
 	// TODO: get skip rules from server
 
 	browser := args[0]
-	if browser != "firefox" && browser != "chrome" {
-		exit(1, "Invalid browser type it should be 'firefox' or 'chrome'")
+	var table string
+	switch browser {
+	case "firefox":
+		table = "moz_places"
+	case "chrome":
+		table = "urls"
+	default:
+		log.Fatal().Str("expected", "'firefox' or 'chrome'").Str("got", browser).Msg("Invalid browser type")
 	}
 	dbFile := args[1]
-	table := "urls"
-	if browser == "firefox" {
-		table = "moz_places"
-	}
+
 	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?immutable=1", dbFile))
 	if err != nil {
-		exit(1, "Failed to open database: "+err.Error())
+		log.Fatal().Err(err).Msg("Failed to open database")
 	}
 	defer db.Close()
+
 	q := fmt.Sprintf("SELECT DISTINCT count(url) FROM %s WHERE url LIKE 'http://%%' OR url LIKE 'https://%%'", table)
 	if i, err := cmd.Flags().GetInt("min-visit"); err == nil && i > 1 {
 		q += fmt.Sprintf(" AND visit_count >= %d", i)
 	}
-
 	// TODO: apply skip rules to get a more precise count?
 	row := db.QueryRow(q)
 	var count int
@@ -523,7 +526,7 @@ func importHistory(cmd *cobra.Command, args []string) {
 	}
 
 	if count < 1 {
-		exit(1, "No URLs found")
+		exit(1, "No URLs found to import")
 	}
 
 	if !yesNoPrompt(fmt.Sprintf("%d URLs found. Start import", count), true) {
