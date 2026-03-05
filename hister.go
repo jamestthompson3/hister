@@ -64,7 +64,11 @@ var listenCmd = &cobra.Command{
 		initIndex()
 	},
 	Run: func(cmd *cobra.Command, _ []string) {
-		setStrArg(cmd, "address", &cfg.Server.Address)
+		if a, err := cmd.Flags().GetString("address"); err == nil && cmd.Flags().Changed("address") {
+			if err := cfg.UpdateListenAddress(a); err != nil {
+				exit(1, `Failed to set server address: `+err.Error())
+			}
+		}
 		server.Listen(cfg)
 	},
 }
@@ -302,14 +306,18 @@ func initConfig() {
 	if err != nil {
 		exit(1, "Failed to initialize config: "+err.Error())
 	}
+
 	if v, _ := rootCmd.PersistentFlags().GetString("log-level"); v != "" && (rootCmd.Flags().Changed("log-level") || cfg.App.LogLevel == "") {
 		cfg.App.LogLevel = v
 	}
 	if v, _ := rootCmd.PersistentFlags().GetString("search-url"); v != "" && (rootCmd.Flags().Changed("search-url") || cfg.App.SearchURL == "") {
 		cfg.App.SearchURL = v
 	}
-	if v, _ := rootCmd.PersistentFlags().GetString("server-url"); v != "" && (rootCmd.Flags().Changed("server-url") || cfg.App.SearchURL == "") {
-		cfg.Server.BaseURL = v
+	if v, _ := rootCmd.PersistentFlags().GetString("server-url"); v != "" && (rootCmd.Flags().Changed("server-url") || cfg.Server.BaseURL == "") {
+		if err := cfg.UpdateBaseURL(v); err != nil {
+			exit(1, "Failed to initialize config: "+err.Error())
+		}
+		fmt.Println(cfg.Server.BaseURL)
 	}
 }
 

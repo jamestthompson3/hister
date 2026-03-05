@@ -36,6 +36,7 @@ type Config struct {
 	Rules                    *Rules            `yaml:"-" mapstructure:"-"`
 	secretKey                []byte
 	parsedBaseURL            *url.URL
+	usesDefaultBaseURL       bool
 }
 
 type App struct {
@@ -335,18 +336,10 @@ func (c *Config) init() error {
 		c.Server.Address = net.JoinHostPort(host, envPort)
 	}
 
-	if c.Server.BaseURL == "" {
-		if strings.HasPrefix(c.Server.Address, "0.0.0.0") {
-			return errors.New("server: base_url must be specified when listening on 0.0.0.0")
-		}
-		c.Server.BaseURL = fmt.Sprintf("http://%s", c.Server.Address)
+	if err := c.UpdateBaseURL(c.Server.BaseURL); err != nil {
+		return err
 	}
-	c.Server.BaseURL = strings.TrimSuffix(c.Server.BaseURL, "/")
-	pu, err := url.Parse(c.Server.BaseURL)
-	if err != nil {
-		return errors.New("failed to parse base URL: " + err.Error())
-	}
-	c.parsedBaseURL = pu
+
 	if c.App.AccessToken != "" && c.parsedBaseURL.Scheme != "https" {
 		log.Warn().Msg("Using authentication token without https. Token is sent plain-text in network requests.")
 	}
@@ -395,6 +388,34 @@ func (c *Config) init() error {
 	}
 	c.LoadTUIConfig()
 	return c.LoadRules()
+}
+
+func (c *Config) UpdateListenAddress(a string) error {
+	c.Server.Address = a
+	if c.usesDefaultBaseURL {
+		return c.UpdateBaseURL("")
+	}
+	return nil
+}
+
+func (c *Config) UpdateBaseURL(u string) error {
+	c.Server.BaseURL = u
+	if c.Server.BaseURL == "" {
+		c.usesDefaultBaseURL = true
+		if strings.HasPrefix(c.Server.Address, "0.0.0.0") {
+			return errors.New("server: base_url must be specified when listening on 0.0.0.0")
+		}
+		c.Server.BaseURL = fmt.Sprintf("http://%s", c.Server.Address)
+	} else {
+		c.usesDefaultBaseURL = false
+	}
+	c.Server.BaseURL = strings.TrimSuffix(c.Server.BaseURL, "/")
+	pu, err := url.Parse(c.Server.BaseURL)
+	if err != nil {
+		return errors.New("failed to parse base URL: " + err.Error())
+	}
+	c.parsedBaseURL = pu
+	return nil
 }
 
 func (c *Config) LoadTUIConfig() {
