@@ -2,9 +2,9 @@
 
 # Hister
 
-**Web history on steroids**
+**Your own search engine**
 
-Hister is a web history management tool that provides blazing fast, content-based search for visited websites. Unlike traditional browser history that only searches URLs and titles, Hister indexes the full content of web pages you visit.
+Hister is a general purpose web search engine providing automatic full-text indexing for visited websites.
 
 ![hister screenshot](webui/website/static/screenshot.png)
 

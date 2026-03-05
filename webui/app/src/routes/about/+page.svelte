@@ -8,12 +8,10 @@
 
 <div class="px-4 md:px-12 py-6 md:py-10 overflow-y-auto flex-1">
   <PageHeader color="hister-coral" class="max-w-3xl mx-auto mb-8">About Hister</PageHeader>
-  <div class="prose prose-neutral dark:prose-invert max-w-3xl mx-auto prose-headings:font-outfit prose-headings:font-extrabold prose-h1:text-text-brand prose-h2:text-text-brand prose-h3:text-text-brand prose-p:font-inter prose-p:text-text-brand-secondary prose-li:font-inter prose-li:text-text-brand-secondary prose-a:text-hister-indigo prose-a:no-underline hover:prose-a:underline prose-strong:text-text-brand prose-hr:border-border-brand-muted">
-    <p>Hister is a web history management tool that provides blazing fast, content-based search for visited websites. Unlike traditional browser history that only searches URLs and titles, Hister indexes the full content of web pages you visit, enabling deep and meaningful search across your browsing history.</p>
+  <div class="prose prose-neutral dark:prose-invert max-w-3xl mx-auto prose-headings:font-outfit prose-headings:font-extrabold prose-h1:text-text-brand prose-h2:text-text-brand prose-h3:text-text-brand prose-p:font-inter prose-p:text-text-brand-secondary prose-li:font-inter prose-li:text-text-brand-secondary prose-a:text-hister-indigo prose-strong:text-text-brand prose-hr:border-border-brand-muted">
+    <p>Hister is a general purpose web search engine providing automatic full-text indexing for visited websites.</p>
 
     <h2>Features</h2>
-
-    <p>Traditional browser history features are limited to basic keyword matching on URLs and page titles. Hister goes beyond these limitations by:</p>
 
     <ul>
       <li><strong>Privacy-focused</strong>: Keep your browsing history indexed locally on your machine</li>
@@ -23,15 +21,6 @@
       <li><strong>Efficient retrieval</strong>: Use keyword aliases to quickly find content</li>
       <li><strong>Offline preview</strong>: Open clutter-free, offline preview of result web pages</li>
     </ul>
-
-    <h2>Why Hister?</h2>
-
-    <p>When we search online it can be because of two reasons:</p>
-    <ul>
-      <li><strong>Find new information</strong></li>
-      <li><strong>Recall information we've read before</strong></li>
-    </ul>
-    <p>Hister aids you with the latter by indexing all the websites you visit and providing a search interface as efficient as possible, while seamlessly letting you fall back to the traditional search methods in case you need to find unexplored content.</p>
 
     <hr />
     <p>Benefits of using Hister instead of free online search engines:</p>
@@ -56,7 +45,7 @@
 
     <h2>Technology</h2>
 
-    <p>Hister is built with Go and uses the Bleve search engine for lightning-fast full-text search capabilities.<br />
+    <p>Hister is built with Go and uses the Bleve search engine for full-text search capabilities.<br />
     The application consists of:</p>
 
     <ul>
@@ -72,5 +61,15 @@
     <h2>Community</h2>
 
     <p>Found a bug or have a suggestion? Visit the <a href="https://github.com/asciimoo/hister/issues">issue tracker</a> on GitHub.</p>
+
+    <hr />
+    <ul>
+      <li><a href="https://hister.org/">Website</a></li>
+      <li><a href="https://github.com/asciimoo/hister">GitHub</a></li>
+      <li><a href="https://codeberg.org/asciimoo/hister">Codeberg</a></li>
+      <li><a href="https://discord.gg/vAjtDtFp">Discord</a></li>
+      <li>#hister on IRCNet</li>
+    </ul>
+
   </div>
 </div>
