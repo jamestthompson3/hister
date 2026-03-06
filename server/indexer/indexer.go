@@ -151,12 +151,13 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 		return err
 	}
 	q := query.NewMatchAllQuery()
-	resultNum := 20
+	total := idx.Total()
+	pageSize := 20
 	page := 0
 	for {
 		req := bleve.NewSearchRequest(q)
-		req.Size = resultNum
-		req.From = page * resultNum
+		req.Size = pageSize
+		req.From = page * pageSize
 		req.Fields = allFields
 		res, err := idx.idx.Search(req)
 		if err != nil || len(res.Hits) < 1 {
@@ -192,7 +193,7 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 			}
 		}
 		page += 1
-		log.Info().Int("Page", page).Msg("Reindexed")
+		log.Info().Msg(fmt.Sprintf("Reindexed [%d/%d]", page*pageSize, total))
 	}
 	idx.Close()
 	tmpIdx.Close()
@@ -217,6 +218,14 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 }
 
 func DocumentCount() uint64 {
+	return i.Total()
+}
+
+func Add(d *Document) error {
+	return i.AddDocument(d)
+}
+
+func (i *indexer) Total() uint64 {
 	q := query.NewMatchAllQuery()
 	req := bleve.NewSearchRequest(q)
 	req.Size = 1
@@ -225,10 +234,6 @@ func DocumentCount() uint64 {
 		return 0
 	}
 	return res.Total
-}
-
-func Add(d *Document) error {
-	return i.AddDocument(d)
 }
 
 func (i *indexer) AddDocument(d *Document) error {
