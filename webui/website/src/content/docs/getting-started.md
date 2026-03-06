@@ -4,15 +4,6 @@ draft: false
 title: 'Getting Started'
 ---
 
-## Browser Extension Setup
-
-To automatically index your browsing history, install the browser extension:
-
-- **Chrome**: [Install from Chrome Web Store](https://chromewebstore.google.com/detail/hister/cciilamhchpmbdnniabclekddabkifhb)
-- **Firefox**: [Install from Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/hister/)
-
-After installing the extension, configure it to point to your Hister server (default: `http://127.0.0.1:4433`).
-
 ## First Run
 
 Check available commands:

@@ -4,18 +4,6 @@ draft: false
 title: 'Server Setup and Configuration'
 ---
 
-This guide explains how to run and configure the Hister server in different environments.
-
-## Basic Localhost Setup
-
-The simplest setup requires no configuration at all. Simply start the server:
-
-```bash
-./hister listen
-```
-
-The server will start on `http://127.0.0.1:4433` and be accessible only from your local machine. This is perfect for personal use on a single computer.
-
 ## Running on a Different Host
 
 If you want to access Hister from other devices on your network or run it on a server, you need to configure two settings.
