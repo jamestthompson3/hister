@@ -1,4 +1,4 @@
-import { error } from "@sveltejs/kit";
+import { error } from '@sveltejs/kit';
 import type { Component } from 'svelte';
 
 export const prerender = true;
@@ -9,11 +9,11 @@ const posts = Object.fromEntries(
   Object.entries(modules).map(([path, mod]) => {
     const slug = path.split('/').pop()?.replace('.md', '') ?? path;
     return [slug, mod];
-  })
+  }),
 ) as Record<string, { default: Component; metadata?: Record<string, unknown> }>;
 
 export function entries() {
-  return Object.keys(posts).map(slug => ({ slug }));
+  return Object.keys(posts).map((slug) => ({ slug }));
 }
 
 export async function load({ params }: { params: { slug: string } }) {
@@ -22,13 +22,13 @@ export async function load({ params }: { params: { slug: string } }) {
     error(404, `Post "${params.slug}" not found`);
   }
   const dateStr = post.metadata?.date as string | undefined;
-  let formattedDate = "";
+  let formattedDate = '';
   if (dateStr) {
     const date = new Date(dateStr);
-    formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    formattedDate = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   }
   return {

@@ -6,13 +6,13 @@
   const isIndex = $derived(page.url.pathname === '/docs' || page.url.pathname === '/docs/');
 
   const currentDoc = $derived(
-    !isIndex ? data.docs.find((d) => page.url.pathname === `/docs/${d.slug}`) : null
+    !isIndex ? data.docs.find((d) => page.url.pathname === `/docs/${d.slug}`) : null,
   );
 
   const categoryColors: Record<string, string> = {
     'Getting Started': 'bg-hister-indigo',
     Reference: 'bg-hister-teal',
-    Deployment: 'bg-hister-coral'
+    Deployment: 'bg-hister-coral',
   };
 </script>
 
@@ -21,17 +21,20 @@
 {:else}
   <!-- Dark header banner -->
   <header class="w-full bg-(--text-primary) px-6 py-10 md:py-14">
-    <div class="max-w-7xl mx-auto">
-      <nav class="flex items-center gap-2 font-space text-[11px] font-bold tracking-[2px] uppercase text-white/40 mb-4">
+    <div class="mx-auto max-w-7xl">
+      <nav
+        class="font-space mb-4 flex items-center gap-2 text-[11px] font-bold tracking-[2px] text-white/40 uppercase"
+      >
         <a
           href="/docs"
-          class="hover:text-white/60 text-white/40 transition-colors no-underline font-space text-[11px] font-bold tracking-[2px]"
-        >Docs</a>
+          class="font-space text-[11px] font-bold tracking-[2px] text-white/40 no-underline transition-colors hover:text-white/60"
+          >Docs</a
+        >
         <span>/</span>
         <span class="text-white/70">{currentDoc?.title}</span>
       </nav>
       <h1
-        class="font-space text-3xl md:text-5xl font-black text-white tracking-[-1px] leading-tight"
+        class="font-space text-3xl leading-tight font-black tracking-[-1px] text-white md:text-5xl"
       >
         {currentDoc?.title}
       </h1>
@@ -39,24 +42,25 @@
   </header>
 
   <!-- Sidebar + Content -->
-  <div class="max-w-7xl mx-auto px-6 md:px-12 py-10 flex flex-col md:flex-row gap-10">
-    <aside class="md:w-56 shrink-0 hidden md:block">
-      <nav class="md:sticky md:top-24 flex flex-col gap-5">
+  <div class="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-10 md:flex-row md:px-12">
+    <aside class="hidden shrink-0 md:block md:w-56">
+      <nav class="flex flex-col gap-5 md:sticky md:top-24">
         {#each data.categories as category}
           <div class="flex flex-col gap-1">
-            <div class="flex items-center gap-2 mb-1">
-              <div class="w-2 h-2 {categoryColors[category.name] ?? 'bg-brutal-border'}"></div>
+            <div class="mb-1 flex items-center gap-2">
+              <div class="h-2 w-2 {categoryColors[category.name] ?? 'bg-brutal-border'}"></div>
               <span
-                class="font-space text-[10px] font-bold tracking-[2px] uppercase text-(--text-secondary)"
+                class="font-space text-[10px] font-bold tracking-[2px] text-(--text-secondary) uppercase"
                 >{category.name}</span
               >
             </div>
             {#each category.docs as doc}
               <a
                 href="/docs/{doc.slug}"
-                class="font-inter text-sm py-2 px-3 no-underline border-l-[3px] transition-colors {page.url.pathname === `/docs/${doc.slug}`
-                  ? 'border-hister-indigo text-(--text-primary) font-semibold bg-hister-indigo/5'
-                  : 'border-transparent text-(--text-secondary) hover:text-(--text-primary) hover:border-brutal-border'}"
+                class="font-inter border-l-[3px] px-3 py-2 text-sm no-underline transition-colors {page
+                  .url.pathname === `/docs/${doc.slug}`
+                  ? 'border-hister-indigo bg-hister-indigo/5 font-semibold text-(--text-primary)'
+                  : 'hover:border-brutal-border border-transparent text-(--text-secondary) hover:text-(--text-primary)'}"
               >
                 {doc.title}
               </a>
@@ -66,7 +70,7 @@
       </nav>
     </aside>
 
-    <main class="flex-1 min-w-0">
+    <main class="min-w-0 flex-1">
       {@render children()}
     </main>
   </div>

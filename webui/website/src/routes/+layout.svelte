@@ -14,7 +14,7 @@
   });
 </script>
 
-<div class="min-h-screen flex flex-col bg-brutal-bg">
+<div class="bg-brutal-bg flex min-h-screen flex-col">
   <Header />
   <main class="flex-1">
     {@render children()}

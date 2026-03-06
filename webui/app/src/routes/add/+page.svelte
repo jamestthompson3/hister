@@ -31,7 +31,7 @@
       const res = await apiFetch('/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, title, text })
+        body: JSON.stringify({ url, title, text }),
       });
       if (res.status === 201) {
         message = 'Document added successfully.';
@@ -59,11 +59,13 @@
   <title>Hister - Add</title>
 </svelte:head>
 
-<div class="flex-1 flex items-start justify-center pt-12 px-6 overflow-y-auto">
+<div class="flex flex-1 items-start justify-center overflow-y-auto px-6 pt-12">
   <Card.Root color="hister-indigo" class="w-full max-w-160">
-    <Card.Header color="hister-indigo" class="justify-between px-7 py-5 gap-2">
-      <Card.Title class="font-outfit font-black text-[22px] text-white">Add Entry</Card.Title>
-      <Card.Description class="font-inter text-[13px] font-medium text-white/70">Manually index a page</Card.Description>
+    <Card.Header color="hister-indigo" class="justify-between gap-2 px-7 py-5">
+      <Card.Title class="font-outfit text-[22px] font-black text-white">Add Entry</Card.Title>
+      <Card.Description class="font-inter text-[13px] font-medium text-white/70"
+        >Manually index a page</Card.Description
+      >
     </Card.Header>
 
     <Card.Content class="space-y-6">
@@ -80,7 +82,7 @@
 
       <form onsubmit={handleSubmit} class="space-y-6">
         <div class="space-y-2">
-          <Label class="font-outfit text-sm font-bold text-text-brand">URL</Label>
+          <Label class="font-outfit text-text-brand text-sm font-bold">URL</Label>
           <Input
             type="text"
             variant="brutal"
@@ -92,7 +94,7 @@
         </div>
 
         <div class="space-y-2">
-          <Label class="font-outfit text-sm font-bold text-text-brand">Title</Label>
+          <Label class="font-outfit text-text-brand text-sm font-bold">Title</Label>
           <Input
             type="text"
             variant="brutal"
@@ -103,11 +105,11 @@
         </div>
 
         <div class="space-y-2">
-          <Label class="font-outfit text-sm font-bold text-text-brand">Content</Label>
+          <Label class="font-outfit text-text-brand text-sm font-bold">Content</Label>
           <Textarea
             bind:value={text}
             placeholder="Paste or type page content..."
-            class="w-full min-h-45 p-4 bg-page-bg border-[3px] border-hister-indigo font-inter text-sm text-text-brand placeholder:text-text-brand-muted rounded-none outline-none focus-visible:ring-0 focus-visible:border-hister-coral transition-colors resize-y"
+            class="bg-page-bg border-hister-indigo font-inter text-text-brand placeholder:text-text-brand-muted focus-visible:border-hister-coral min-h-45 w-full resize-y rounded-none border-[3px] p-4 text-sm transition-colors outline-none focus-visible:ring-0"
           />
         </div>
 
@@ -115,7 +117,7 @@
           type="submit"
           disabled={submitting}
           size="lg"
-          class="w-full h-13 bg-hister-coral shadow-[4px_4px_0px_var(--hister-coral)] text-white font-outfit text-base font-extrabold tracking-[1px] hover:bg-hister-coral/90"
+          class="bg-hister-coral font-outfit hover:bg-hister-coral/90 h-13 w-full text-base font-extrabold tracking-[1px] text-white shadow-[4px_4px_0px_var(--hister-coral)]"
         >
           <Save class="size-5 shrink-0" />
           <span>{submitting ? 'Saving...' : 'Save Entry'}</span>

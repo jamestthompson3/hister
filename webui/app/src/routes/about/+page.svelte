@@ -6,20 +6,38 @@
   <title>Hister - About</title>
 </svelte:head>
 
-<div class="px-4 md:px-12 py-6 md:py-10 overflow-y-auto flex-1">
-  <PageHeader color="hister-coral" class="max-w-3xl mx-auto mb-8">About Hister</PageHeader>
-  <div class="prose prose-neutral dark:prose-invert max-w-3xl mx-auto prose-headings:font-outfit prose-headings:font-extrabold prose-h1:text-text-brand prose-h2:text-text-brand prose-h3:text-text-brand prose-p:font-inter prose-p:text-text-brand-secondary prose-li:font-inter prose-li:text-text-brand-secondary prose-a:text-hister-indigo prose-strong:text-text-brand prose-hr:border-border-brand-muted">
-    <p>Hister is a general purpose web search engine providing automatic full-text indexing for visited websites.</p>
+<div class="flex-1 overflow-y-auto px-4 py-6 md:px-12 md:py-10">
+  <PageHeader color="hister-coral" class="mx-auto mb-8 max-w-3xl">About Hister</PageHeader>
+  <div
+    class="prose prose-neutral dark:prose-invert prose-headings:font-outfit prose-headings:font-extrabold prose-h1:text-text-brand prose-h2:text-text-brand prose-h3:text-text-brand prose-p:font-inter prose-p:text-text-brand-secondary prose-li:font-inter prose-li:text-text-brand-secondary prose-a:text-hister-indigo prose-strong:text-text-brand prose-hr:border-border-brand-muted mx-auto max-w-3xl"
+  >
+    <p>
+      Hister is a general purpose web search engine providing automatic full-text indexing for
+      visited websites.
+    </p>
 
     <h2>Features</h2>
 
     <ul>
-      <li><strong>Privacy-focused</strong>: Keep your browsing history indexed locally on your machine</li>
-      <li><strong>Full-text indexing</strong>: Search through the actual content of web pages you've visited</li>
-      <li><strong>Advanced search capabilities</strong>: Utilize a powerful query language for precise results</li>
-      <li><strong>Smart organization</strong>: Configure blacklist and priority rules for better control</li>
+      <li>
+        <strong>Privacy-focused</strong>: Keep your browsing history indexed locally on your machine
+      </li>
+      <li>
+        <strong>Full-text indexing</strong>: Search through the actual content of web pages you've
+        visited
+      </li>
+      <li>
+        <strong>Advanced search capabilities</strong>: Utilize a powerful query language for precise
+        results
+      </li>
+      <li>
+        <strong>Smart organization</strong>: Configure blacklist and priority rules for better
+        control
+      </li>
       <li><strong>Efficient retrieval</strong>: Use keyword aliases to quickly find content</li>
-      <li><strong>Offline preview</strong>: Open clutter-free, offline preview of result web pages</li>
+      <li>
+        <strong>Offline preview</strong>: Open clutter-free, offline preview of result web pages
+      </li>
     </ul>
 
     <hr />
@@ -37,20 +55,40 @@
     <p>Hister is perfect for:</p>
     <ul>
       <li><strong>Privacy protection</strong>: Manage your data, access it without tracking</li>
-      <li><strong>Research</strong>: Quickly find information from articles and documentation you've read</li>
-      <li><strong>Reference</strong>: Locate code snippets, tutorials, or solutions you've visited before</li>
-      <li><strong>Knowledge management</strong>: Build a searchable archive of your web browsing</li>
-      <li><strong>Productivity</strong>: Spend less time searching for "that page I saw last week"</li>
+      <li>
+        <strong>Research</strong>: Quickly find information from articles and documentation you've
+        read
+      </li>
+      <li>
+        <strong>Reference</strong>: Locate code snippets, tutorials, or solutions you've visited
+        before
+      </li>
+      <li>
+        <strong>Knowledge management</strong>: Build a searchable archive of your web browsing
+      </li>
+      <li>
+        <strong>Productivity</strong>: Spend less time searching for "that page I saw last week"
+      </li>
     </ul>
 
     <h2>Technology</h2>
 
-    <p>Hister is built with Go and uses the Bleve search engine for full-text search capabilities.<br />
-    The application consists of:</p>
+    <p>
+      Hister is built with Go and uses the Bleve search engine for full-text search capabilities.<br
+      />
+      The application consists of:
+    </p>
 
     <ul>
       <li>A local web server for search interface</li>
-      <li>Browser extensions for <a href="https://chromewebstore.google.com/detail/hister/cciilamhchpmbdnniabclekddabkifhb">Chrome</a> and <a href="https://addons.mozilla.org/en-US/firefox/addon/hister/">Firefox</a> to automatically index visited pages</li>
+      <li>
+        Browser extensions for <a
+          href="https://chromewebstore.google.com/detail/hister/cciilamhchpmbdnniabclekddabkifhb"
+          >Chrome</a
+        >
+        and <a href="https://addons.mozilla.org/en-US/firefox/addon/hister/">Firefox</a> to automatically
+        index visited pages
+      </li>
       <li>A command line utility to index/import/explore the contents of Hister</li>
     </ul>
 
@@ -60,7 +98,11 @@
 
     <h2>Community</h2>
 
-    <p>Found a bug or have a suggestion? Visit the <a href="https://github.com/asciimoo/hister/issues">issue tracker</a> on GitHub.</p>
+    <p>
+      Found a bug or have a suggestion? Visit the <a
+        href="https://github.com/asciimoo/hister/issues">issue tracker</a
+      > on GitHub.
+    </p>
 
     <hr />
     <ul>
@@ -70,6 +112,5 @@
       <li><a href="https://discord.gg/vAjtDtFp">Discord</a></li>
       <li>#hister on IRCNet</li>
     </ul>
-
   </div>
 </div>

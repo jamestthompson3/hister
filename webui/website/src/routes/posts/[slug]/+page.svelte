@@ -16,17 +16,19 @@
 </svelte:head>
 
 <header class="w-full bg-(--text-primary) px-6 py-12 md:py-16">
-  <div class="max-w-3xl mx-auto">
+  <div class="mx-auto max-w-3xl">
     {#if data.date}
       <time class="font-inter text-sm text-white/40" datetime={data.date}>{data.date}</time>
     {/if}
-    <h1 class="font-space text-3xl md:text-5xl font-black text-white tracking-[-1px] leading-tight mt-3">
+    <h1
+      class="font-space mt-3 text-3xl leading-tight font-black tracking-[-1px] text-white md:text-5xl"
+    >
       {data.meta.title}
     </h1>
   </div>
 </header>
 
-<article class="max-w-3xl mx-auto px-6 py-12">
+<article class="mx-auto max-w-3xl px-6 py-12">
   <div class="content">
     <data.content />
   </div>

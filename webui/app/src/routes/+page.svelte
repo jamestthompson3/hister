@@ -14,7 +14,7 @@
     escapeHTML,
     buildSearchQuery,
     parseSearchResults,
-    openURL
+    openURL,
   } from '$lib/search';
   import { fetchConfig, apiFetch } from '$lib/api';
   import type { SearchResults } from '$lib/search';
@@ -29,9 +29,22 @@
   import { ScrollArea } from '@hister/components/ui/scroll-area';
   import { Kbd } from '@hister/components/ui/kbd';
   import {
-    Search, Star, Globe, MoreVertical, Eye, Trash2,
-    Pin, PinOff, Download, ExternalLink, History, Shield, Link2,
-    Keyboard, HelpCircle, X
+    Search,
+    Star,
+    Globe,
+    MoreVertical,
+    Eye,
+    Trash2,
+    Pin,
+    PinOff,
+    Download,
+    ExternalLink,
+    History,
+    Shield,
+    Link2,
+    Keyboard,
+    HelpCircle,
+    X,
   } from 'lucide-svelte';
   import type { HistoryItem } from '$lib/types';
 
@@ -101,16 +114,19 @@
     { border: 'border-hister-amber', bg: 'bg-hister-amber/10', text: 'text-hister-amber' },
   ];
 
-  const hotkeyActions: Record<string, (e?: KeyboardEvent, isInputFocus?: boolean) => void | boolean> = {
-    'open_result': openSelectedResult,
-    'open_result_in_new_tab': (e?: KeyboardEvent, i?: boolean) => openSelectedResult(e, i, true),
-    'select_next_result': selectNextResult,
-    'select_previous_result': selectPreviousResult,
-    'open_query_in_search_engine': openQueryInSearchEngine,
-    'focus_search_input': focusSearchInput,
-    'view_result_popup': viewResultPopup,
-    'autocomplete': autocompleteQuery,
-    'show_hotkeys': showHotkeys
+  const hotkeyActions: Record<
+    string,
+    (e?: KeyboardEvent, isInputFocus?: boolean) => void | boolean
+  > = {
+    open_result: openSelectedResult,
+    open_result_in_new_tab: (e?: KeyboardEvent, i?: boolean) => openSelectedResult(e, i, true),
+    select_next_result: selectNextResult,
+    select_previous_result: selectPreviousResult,
+    open_query_in_search_engine: openQueryInSearchEngine,
+    focus_search_input: focusSearchInput,
+    view_result_popup: viewResultPopup,
+    autocomplete: autocompleteQuery,
+    show_hotkeys: showHotkeys,
   };
 
   const isSearching = $derived(query.length > 0 || resultsShown);
@@ -127,8 +143,12 @@
         if (query) sendQuery(query);
       },
       onMessage: renderResults,
-      onClose: () => { connected = false; },
-      onError: () => { connected = false; }
+      onClose: () => {
+        connected = false;
+      },
+      onError: () => {
+        connected = false;
+      },
     });
     wsManager.connect();
   }
@@ -164,8 +184,13 @@
     dateTo = params.get('date_to') || '';
     lastPushedEmpty = !query;
     if (query && connected) sendQuery(query);
-    if (!query) { autocomplete = ''; lastResults = null; }
-    tick().then(() => { skipUrlUpdate = false; });
+    if (!query) {
+      autocomplete = '';
+      lastResults = null;
+    }
+    tick().then(() => {
+      skipUrlUpdate = false;
+    });
   }
 
   function renderResults(event: MessageEvent) {
@@ -185,12 +210,18 @@
     saveHistoryItem(url, stripHtml(title), query, false, () => openURL(url, newWindow));
   }
 
-  async function saveHistoryItem(url: string, title: string, queryStr: string, remove: boolean, callback?: () => void) {
+  async function saveHistoryItem(
+    url: string,
+    title: string,
+    queryStr: string,
+    remove: boolean,
+    callback?: () => void,
+  ) {
     try {
       const res = await apiFetch('/history', {
         method: 'POST',
         headers: { 'Content-type': 'application/json; charset=UTF-8' },
-        body: JSON.stringify({ url, title, query: queryStr, delete: remove })
+        body: JSON.stringify({ url, title, query: queryStr, delete: remove }),
       });
       callback?.();
     } catch {}
@@ -208,7 +239,7 @@
     if (lastResults?.documents) {
       lastResults = {
         ...lastResults,
-        documents: lastResults.documents.filter((d) => d.url !== url)
+        documents: lastResults.documents.filter((d) => d.url !== url),
       };
     }
   }
@@ -224,7 +255,7 @@
 
   async function openReadable(e: Event, url: string, title: string) {
     e.preventDefault();
-    if(e.stopPropagation) e.stopPropagation();
+    if (e.stopPropagation) e.stopPropagation();
     try {
       const resp = await apiFetch(`/readable?url=${encodeURIComponent(url)}`);
       if (!resp.ok) {
@@ -251,8 +282,14 @@
     scrollTo(results[highlightIdx]);
   }
 
-  function selectNextResult(e?: KeyboardEvent) { if (e) e.preventDefault(); selectNthResult(1); }
-  function selectPreviousResult(e?: KeyboardEvent) { if (e) e.preventDefault(); selectNthResult(-1); }
+  function selectNextResult(e?: KeyboardEvent) {
+    if (e) e.preventDefault();
+    selectNthResult(1);
+  }
+  function selectPreviousResult(e?: KeyboardEvent) {
+    if (e) e.preventDefault();
+    selectNthResult(-1);
+  }
 
   function openSelectedResult(e?: KeyboardEvent, isInputFocus?: boolean, newWindow = false) {
     if (e) e.preventDefault();
@@ -260,7 +297,9 @@
       openURL(getSearchUrl(config.searchUrl, query.substring(2)), newWindow);
       return;
     }
-    const res = document.querySelectorAll<HTMLAnchorElement>('[data-result] [data-result-link]')[highlightIdx];
+    const res = document.querySelectorAll<HTMLAnchorElement>('[data-result] [data-result-link]')[
+      highlightIdx
+    ];
     if (res) {
       openResult(res.getAttribute('href')!, res.innerText, newWindow);
     }
@@ -287,41 +326,71 @@
       query = autocomplete;
       sendQuery(query);
     } else {
-        return true;
+      return true;
     }
   }
 
-  function openQueryInSearchEngine(e?: KeyboardEvent) { if (e) e.preventDefault(); openURL(getSearchUrl(config.searchUrl, query)); }
-  function focusSearchInput(e?: KeyboardEvent, isInputFocus?: boolean) { if (!isInputFocus) { if (e) e.preventDefault(); inputEl?.focus(); } }
+  function openQueryInSearchEngine(e?: KeyboardEvent) {
+    if (e) e.preventDefault();
+    openURL(getSearchUrl(config.searchUrl, query));
+  }
+  function focusSearchInput(e?: KeyboardEvent, isInputFocus?: boolean) {
+    if (!isInputFocus) {
+      if (e) e.preventDefault();
+      inputEl?.focus();
+    }
+  }
 
-  function closePopup(): boolean { if (showPopup) { showPopup = false; return true; } return false; }
+  function closePopup(): boolean {
+    if (showPopup) {
+      showPopup = false;
+      return true;
+    }
+    return false;
+  }
 
   const hotkeyDescriptions: Record<string, string> = {
-    'open_result': 'Open result',
-    'open_result_in_new_tab': 'Open result in new tab',
-    'select_next_result': 'Select next result',
-    'select_previous_result': 'Select previous result',
-    'open_query_in_search_engine': 'Open in search engine',
-    'focus_search_input': 'Focus search input',
-    'view_result_popup': 'View result content',
-    'autocomplete': 'Autocomplete query',
-    'show_hotkeys': 'Show help'
+    open_result: 'Open result',
+    open_result_in_new_tab: 'Open result in new tab',
+    select_next_result: 'Select next result',
+    select_previous_result: 'Select previous result',
+    open_query_in_search_engine: 'Open in search engine',
+    focus_search_input: 'Focus search input',
+    view_result_popup: 'View result content',
+    autocomplete: 'Autocomplete query',
+    show_hotkeys: 'Show help',
   };
 
   function showHotkeys(e?: KeyboardEvent, isInputFocus?: boolean) {
-    if (showHelp) { showHelp = false; return; }
+    if (showHelp) {
+      showHelp = false;
+      return;
+    }
     if (!isInputFocus) {
-        showHelp = true;
+      showHelp = true;
     }
   }
 
   function handleKeydown(e: KeyboardEvent) {
-    const isInputFocus = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
+    const isInputFocus =
+      document.activeElement instanceof HTMLInputElement ||
+      document.activeElement instanceof HTMLTextAreaElement;
     keyHandler?.handle(e, isInputFocus);
     if (e.key === 'Escape') {
-      if (showHelp) { showHelp = false; e.preventDefault(); return; }
-      if (contextMenuSearch) { contextMenuSearch = null; e.preventDefault(); return; }
-      if (closePopup()) { e.preventDefault(); return; }
+      if (showHelp) {
+        showHelp = false;
+        e.preventDefault();
+        return;
+      }
+      if (contextMenuSearch) {
+        contextMenuSearch = null;
+        e.preventDefault();
+        return;
+      }
+      if (closePopup()) {
+        e.preventDefault();
+        return;
+      }
       if (isSearching) {
         query = '';
         resultsShown = false;
@@ -338,17 +407,22 @@
   }
 
   function deleteRecentSearch(q: string) {
-    recentSearches = recentSearches.filter(s => s !== q);
-    localStorage.setItem('deletedSearches', JSON.stringify(
-      [...JSON.parse(localStorage.getItem('deletedSearches') || '[]'), q]
-    ));
+    recentSearches = recentSearches.filter((s) => s !== q);
+    localStorage.setItem(
+      'deletedSearches',
+      JSON.stringify([...JSON.parse(localStorage.getItem('deletedSearches') || '[]'), q]),
+    );
     contextMenuSearch = null;
   }
 
   function deleteAllRecentSearches() {
-    localStorage.setItem('deletedSearches', JSON.stringify(
-      [...JSON.parse(localStorage.getItem('deletedSearches') || '[]'), ...recentSearches]
-    ));
+    localStorage.setItem(
+      'deletedSearches',
+      JSON.stringify([
+        ...JSON.parse(localStorage.getItem('deletedSearches') || '[]'),
+        ...recentSearches,
+      ]),
+    );
     recentSearches = [];
   }
 
@@ -365,21 +439,24 @@
 
   async function loadHomeStats() {
     try {
-      const statsRes = await apiFetch('/stats', { headers: { 'Accept': 'application/json' } });
+      const statsRes = await apiFetch('/stats', { headers: { Accept: 'application/json' } });
 
       if (statsRes.ok) {
         const stats = await statsRes.json();
         rulesCount = stats.rule_count;
         aliasesCount = stats.alias_count;
         historyCount = stats.doc_count;
-        if(stats.recent_searches) {
-          const deletedSearches: string[] = JSON.parse(localStorage.getItem('deletedSearches') || '[]');
-          recentSearches = stats.recent_searches.map((s: { query: string }) => s.query).filter((q: string) => !deletedSearches.includes(q));
+        if (stats.recent_searches) {
+          const deletedSearches: string[] = JSON.parse(
+            localStorage.getItem('deletedSearches') || '[]',
+          );
+          recentSearches = stats.recent_searches
+            .map((s: { query: string }) => s.query)
+            .filter((q: string) => !deletedSearches.includes(q));
         }
       }
-
-    } catch(e) {
-      console.log("Failed to retreive stats", e);
+    } catch (e) {
+      console.log('Failed to retreive stats', e);
     }
     statsLoaded = true;
   }
@@ -396,8 +473,8 @@
           ease: 'inOutSine',
           duration: 6000,
           loop: true,
-          alternate: true
-        })
+          alternate: true,
+        }),
       );
     }
 
@@ -408,8 +485,8 @@
           duration: 400,
           ease: 'inOutSine',
           loop: true,
-          loopDelay: 10000
-        })
+          loopDelay: 10000,
+        }),
       );
     }
 
@@ -419,8 +496,8 @@
           scaleX: [0, 1],
           duration: 800,
           ease: 'outCubic',
-          delay: 300
-        })
+          delay: 300,
+        }),
       );
     }
   }
@@ -438,14 +515,16 @@
           displayHistoryCount = Math.round(counterObj.h);
           displayRulesCount = Math.round(counterObj.r);
           displayAliasesCount = Math.round(counterObj.a);
-        }
-      })
+        },
+      }),
     );
   }
 
   function cleanupAnimations() {
     for (const h of animationHandles) {
-      try { h.revert(); } catch {}
+      try {
+        h.revert();
+      } catch {}
     }
     animationHandles = [];
   }
@@ -465,12 +544,29 @@
 
   $effect(() => {
     isSearching;
-    (async () => { await tick(); inputEl?.focus(); })();
+    (async () => {
+      await tick();
+      inputEl?.focus();
+    })();
   });
-  $effect(() => { if (query && connected) { sendQuery(query); localStorage.setItem('lastQuery', query); } });
-  $effect(() => { if (!query) { autocomplete = ''; lastResults = null; } });
-  $effect(() => { if (dateFrom || dateTo) sendQuery(query); });
-  $effect(() => { updateURL(); });
+  $effect(() => {
+    if (query && connected) {
+      sendQuery(query);
+      localStorage.setItem('lastQuery', query);
+    }
+  });
+  $effect(() => {
+    if (!query) {
+      autocomplete = '';
+      lastResults = null;
+    }
+  });
+  $effect(() => {
+    if (dateFrom || dateTo) sendQuery(query);
+  });
+  $effect(() => {
+    updateURL();
+  });
   $effect.pre(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const q = urlParams.get('q');
@@ -498,7 +594,10 @@
       keyHandler = new KeyHandler(config.hotkeys, hotkeyActions);
       loadHomeStats();
     })();
-    return () => { wsManager?.close(); cleanupAnimations(); };
+    return () => {
+      wsManager?.close();
+      cleanupAnimations();
+    };
   });
 </script>
 
@@ -509,36 +608,54 @@
 <svelte:window onkeydown={handleKeydown} onpopstate={handlePopState} />
 
 <Dialog.Root bind:open={showPopup}>
-  <Dialog.Content class="max-w-2xl max-h-[80vh] overflow-auto border-[3px] border-border-brand bg-card-surface shadow-[6px_6px_0px_var(--hister-indigo)] rounded-none p-6">
-    <Dialog.Header class="border-b-[3px] border-border-brand-muted pb-4">
-      <Dialog.Title class="font-outfit font-bold text-lg text-text-brand">{popupTitle}</Dialog.Title>
+  <Dialog.Content
+    class="border-border-brand bg-card-surface max-h-[80vh] max-w-2xl overflow-auto rounded-none border-[3px] p-6 shadow-[6px_6px_0px_var(--hister-indigo)]"
+  >
+    <Dialog.Header class="border-border-brand-muted border-b-[3px] pb-4">
+      <Dialog.Title class="font-outfit text-text-brand text-lg font-bold">{popupTitle}</Dialog.Title
+      >
     </Dialog.Header>
-    <div class="font-inter text-sm text-text-brand-secondary prose max-w-none">{@html popupContent}</div>
+    <div class="font-inter text-text-brand-secondary prose max-w-none text-sm">
+      {@html popupContent}
+    </div>
   </Dialog.Content>
 </Dialog.Root>
 
 <Dialog.Root bind:open={showHelp}>
-  <Dialog.Content showCloseButton={false} class="max-w-md border-[3px] border-border-brand bg-card-surface shadow-[6px_6px_0px_var(--hister-indigo)] rounded-none p-0 gap-0 overflow-hidden">
-    <Dialog.Header class="flex-row items-center justify-between px-5 py-4 bg-hister-indigo gap-2">
+  <Dialog.Content
+    showCloseButton={false}
+    class="border-border-brand bg-card-surface max-w-md gap-0 overflow-hidden rounded-none border-[3px] p-0 shadow-[6px_6px_0px_var(--hister-indigo)]"
+  >
+    <Dialog.Header class="bg-hister-indigo flex-row items-center justify-between gap-2 px-5 py-4">
       <Dialog.Title class="flex items-center gap-2">
         <Keyboard class="size-5 text-white" />
         <span class="font-outfit text-lg font-extrabold text-white">Keyboard Shortcuts</span>
       </Dialog.Title>
-      <Dialog.Close class="text-white/70 hover:text-white p-0.5">
+      <Dialog.Close class="p-0.5 text-white/70 hover:text-white">
         <X class="size-5" />
       </Dialog.Close>
     </Dialog.Header>
-    <Card.Content class="p-4 space-y-0">
+    <Card.Content class="space-y-0 p-4">
       {#each Object.entries(config.hotkeys) as [key, action]}
-        <div class="flex items-center justify-between py-2.5 border-b-[1px] border-border-brand-muted">
-          <span class="font-inter text-text-brand-secondary">{hotkeyDescriptions[action] || action}</span>
-          <Kbd class="bg-muted-surface border-[2px] border-border-brand-muted px-2.5 py-0.5 font-fira text-xs font-semibold text-text-brand rounded-none h-auto">{key}</Kbd>
+        <div
+          class="border-border-brand-muted flex items-center justify-between border-b-[1px] py-2.5"
+        >
+          <span class="font-inter text-text-brand-secondary"
+            >{hotkeyDescriptions[action] || action}</span
+          >
+          <Kbd
+            class="bg-muted-surface border-border-brand-muted font-fira text-text-brand h-auto rounded-none border-[2px] px-2.5 py-0.5 text-xs font-semibold"
+            >{key}</Kbd
+          >
         </div>
       {/each}
     </Card.Content>
-    <Card.Footer class="px-5 py-3 bg-muted-surface border-t-[2px] border-border-brand-muted">
-      <p class="font-inter text-xs text-text-brand-muted">
-        Press <Kbd class="bg-card-surface border border-border-brand-muted px-1.5 py-0.5 font-fira text-[10px] rounded-none h-auto">?</Kbd> to toggle this dialog
+    <Card.Footer class="bg-muted-surface border-border-brand-muted border-t-[2px] px-5 py-3">
+      <p class="font-inter text-text-brand-muted text-xs">
+        Press <Kbd
+          class="bg-card-surface border-border-brand-muted font-fira h-auto rounded-none border px-1.5 py-0.5 text-[10px]"
+          >?</Kbd
+        > to toggle this dialog
       </p>
     </Card.Footer>
   </Dialog.Content>
@@ -547,8 +664,10 @@
 <Button
   variant="outline"
   size="icon"
-  class="hidden md:inline-flex fixed bottom-14 right-6 z-30 bg-card-surface border-[3px] border-brutal-border text-text-brand-muted hover:border-hister-indigo hover:text-hister-indigo shadow-brutal hover:shadow-brutal-sm hover:translate-x-[2px] hover:translate-y-[2px] transition-all rounded-none"
-  onclick={() => { showHelp = !showHelp; }}
+  class="bg-card-surface border-brutal-border text-text-brand-muted hover:border-hister-indigo hover:text-hister-indigo shadow-brutal hover:shadow-brutal-sm fixed right-6 bottom-14 z-30 hidden rounded-none border-[3px] transition-all hover:translate-x-[2px] hover:translate-y-[2px] md:inline-flex"
+  onclick={() => {
+    showHelp = !showHelp;
+  }}
   title="Keyboard shortcuts (?)"
   aria-label="Show keyboard shortcuts"
 >
@@ -556,252 +675,438 @@
 </Button>
 
 {#if isSearching}
-  <div class="flex-1 flex flex-col min-h-0">
-    <div class="search flex items-center gap-3 shrink-0 h-10 md:h-14 px-4 bg-card-surface border-b-[3px] border-brutal-border">
-      <Search class="size-4 md:size-6 text-text-brand-muted" />
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div
+      class="search bg-card-surface border-brutal-border flex h-10 shrink-0 items-center gap-3 border-b-[3px] px-4 md:h-14"
+    >
+      <Search class="text-text-brand-muted size-4 md:size-6" />
       <Input
         bind:ref={inputEl}
         bind:value={query}
         placeholder="Search..."
-        class="flex-1 h-full bg-transparent font-inter text-lg md:text-2xl font-medium text-text-brand placeholder:text-text-brand-muted border-0 shadow-none focus-visible:ring-0 p-0"
+        class="font-inter text-text-brand placeholder:text-text-brand-muted h-full flex-1 border-0 bg-transparent p-0 text-lg font-medium shadow-none focus-visible:ring-0 md:text-2xl"
       />
-      <div class="w-2 h-2 shrink-0 pulse-dot {connected ? 'bg-hister-teal' : 'bg-hister-rose'}" title={connected ? 'Connected' : 'Disconnected'}></div>
+      <div
+        class="pulse-dot h-2 w-2 shrink-0 {connected ? 'bg-hister-teal' : 'bg-hister-rose'}"
+        title={connected ? 'Connected' : 'Disconnected'}
+      ></div>
     </div>
     {#if autocomplete && autocomplete !== query}
-    <span class="mx-8 font-fira text-sm text-text-brand-muted">
+      <span class="font-fira text-text-brand-muted mx-8 text-sm">
         Tab: <span class="text-hister-indigo">{autocomplete}</span>
-    </span>
+      </span>
     {/if}
 
-    <ScrollArea class="flex-1 min-h-0">
-      <div class="w-full overflow-x-hidden px-3 md:px-12 py-2 space-y-3">
-      {#if hasResults}
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="font-outfit text-sm md:text-base font-bold text-hister-indigo">
-            {lastResults?.total || totalResults} results{query ? ` for "${query}"` : ''}
-          </span>
-          <div class="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              class="font-inter text-xs text-text-brand-muted hover:text-hister-coral gap-1 no-underline"
-              href={getSearchUrl(config.searchUrl, query)}
-            >
-              <ExternalLink class="size-3" />
-              Web
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="font-inter text-xs text-hister-indigo hover:text-hister-coral"
-              onclick={() => setSort(currentSort === '' ? 'domain' : '')}
-            >
-              Sort: {currentSort === 'domain' ? 'Domain' : 'Relevance'}
-            </Button>
+    <ScrollArea class="min-h-0 flex-1">
+      <div class="w-full space-y-3 overflow-x-hidden px-3 py-2 md:px-12">
+        {#if hasResults}
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="font-outfit text-hister-indigo text-sm font-bold md:text-base">
+              {lastResults?.total || totalResults} results{query ? ` for "${query}"` : ''}
+            </span>
+            <div class="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                class="font-inter text-text-brand-muted hover:text-hister-coral gap-1 text-xs no-underline"
+                href={getSearchUrl(config.searchUrl, query)}
+              >
+                <ExternalLink class="size-3" />
+                Web
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="font-inter text-hister-indigo hover:text-hister-coral text-xs"
+                onclick={() => setSort(currentSort === '' ? 'domain' : '')}
+              >
+                Sort: {currentSort === 'domain' ? 'Domain' : 'Relevance'}
+              </Button>
+            </div>
           </div>
-        </div>
 
-        {#if lastResults?.query && lastResults.query.text !== query}
-          <p class="font-inter text-sm text-text-brand-muted">
-            Expanded query: <code class="font-fira bg-muted-surface text-primary px-1.5 py-0.5 text-xs">{lastResults.query.text}</code>
-          </p>
-        {/if}
-
-        <div class="flex flex-wrap items-center gap-2 md:gap-3 font-inter text-sm text-text-brand-secondary">
-          <label class="flex items-center gap-1.5">
-            From:
-            <Input type="date" bind:value={dateFrom} class="h-7 px-2 text-xs border-[2px] border-border-brand-muted bg-card-surface text-text-brand font-fira shadow-none focus-visible:ring-0 focus-visible:border-hister-indigo" />
-          </label>
-          <label class="flex items-center gap-1.5">
-            To:
-            <Input type="date" bind:value={dateTo} class="h-7 px-2 text-xs border-[2px] border-border-brand-muted bg-card-surface text-text-brand font-fira shadow-none focus-visible:ring-0 focus-visible:border-hister-indigo" />
-          </label>
-        </div>
-
-        {#if lastResults?.history?.length}
-          {#each lastResults.history as r, i}
-            {@const favSrc = getFaviconSrc(r.favicon, r.url)}
-            <article data-result class="flex gap-3 py-3.5 w-full overflow-hidden transition-all duration-150"
-              style={i === highlightIdx ? 'background: linear-gradient(90deg, transparent, rgba(90, 138, 138, 0.12), transparent); border-left: 3px solid var(--hister-teal); padding-left: 0.75rem;' : ''}>
-              <div class="w-5 h-5 shrink-0 flex items-center justify-center mt-0.5 overflow-hidden bg-hister-teal">
-                {#if favSrc}
-                  <img src={favSrc} alt="" class="w-full h-full object-cover" onload={(e) => { (e.target as HTMLImageElement).parentElement!.style.backgroundColor = 'transparent'; }} onerror={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />
-                  <Star class="size-3 text-white hidden" />
-                {:else}
-                  <Star class="size-3 text-white" />
-                {/if}
-              </div>
-              <div class="flex-1 min-w-0 w-0 space-y-0.5">
-                <a data-result-link href={r.url} class="font-outfit text-md md:text-xl font-semibold text-hister-teal hover:underline block overflow-hidden text-ellipsis whitespace-nowrap w-full" onclick={(e) => { e.preventDefault(); openResult(r.url, r.title || '*title*'); }}>
-                  {@html r.title || '*title*'}
-                </a>
-                <div class="flex items-center gap-2">
-                  <span class="font-fira text-hister-teal truncate overflow-hidden text-ellipsis whitespace-nowrap">{r.url}</span>
-                  <Badge variant="secondary" class="px-1.5 py-0 h-4 bg-hister-teal/10 text-hister-teal border-0">pinned</Badge>
-                  <Button data-readable variant="link" size="sm" class="text-xs md:text-sm font-medium text-hister-indigo p-0 h-auto gap-0.5 shrink-0" onclick={(e) => openReadable(e, r.url, r.title || '*title*')}>
-                    <Eye class="size-3" /><span>view</span>
-                  </Button>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="shrink-0 text-text-brand-muted hover:text-text-brand cursor-pointer"
-                onclick={() => { showActionsForResult = showActionsForResult === 'history:' + r.url ? null : 'history:' + r.url; }}
+          {#if lastResults?.query && lastResults.query.text !== query}
+            <p class="font-inter text-text-brand-muted text-sm">
+              Expanded query: <code
+                class="font-fira bg-muted-surface text-primary px-1.5 py-0.5 text-xs"
+                >{lastResults.query.text}</code
               >
-                <MoreVertical class="size-4" />
-              </Button>
-            </article>
-            {#if showActionsForResult === 'history:' + r.url}
-              <Card.Root class="ml-8 border-[3px] border-brutal-border bg-card-surface rounded-none py-3 gap-2 shadow-[3px_3px_0_var(--brutal-shadow)]">
-                <Card.Content class="space-y-2">
-                  <Button variant="outline" size="sm" class="text-xs border-[2px] border-hister-rose text-hister-rose hover:bg-hister-rose/10" onclick={() => updatePriorityResult(r.url, r.title || '*title*', true)}>
-                    <PinOff class="size-3.5" />
-                    Remove priority
-                  </Button>
-                  {#if actionsMessage}
-                    <p class="text-xs font-inter {actionsError ? 'text-hister-rose' : 'text-hister-teal'}">{actionsMessage}</p>
-                  {/if}
-                </Card.Content>
-              </Card.Root>
-            {/if}
-          {/each}
-        {/if}
+            </p>
+          {/if}
 
-        {#if lastResults?.documents}
-          {#each lastResults.documents as r, i}
-            {@const idx = historyLen + i}
-            {@const color = "hister-cyan" }
-            {@const favSrc = getFaviconSrc(r.favicon, r.url)}
-            <article data-result class="flex gap-3 py-3.5 w-full overflow-hidden transition-all duration-150"
-              style={idx === highlightIdx ? `background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--${color}) 12%, transparent), transparent); border-left: 3px solid var(--${color}); padding-left: 0.75rem;` : ''}>
-              <div class="w-5 h-5 shrink-0 flex items-center justify-center mt-0.5 overflow-hidden" style="background-color: var(--{color});">
-                {#if favSrc}
-                  <img src={favSrc} alt="" class="w-full h-full object-cover" onload={(e) => { (e.target as HTMLImageElement).parentElement!.style.backgroundColor = 'transparent'; }} onerror={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />
-                  <Globe class="size-3 text-white hidden" />
-                {:else}
-                  <Globe class="size-3 text-white" />
-                {/if}
-              </div>
-              <div class="flex-1 min-w-0 w-0 space-y-0.5">
-                <a data-result-link href={r.url} class="font-outfit text-md md:text-xl font-semibold hover:underline block w-full" style="color: var(--{color});" onclick={(e) => { e.preventDefault(); openResult(r.url, r.title || '*title*'); }}>
-                  {@html r.title || '*title*'}
-                </a>
-                <div class="flex items-left md:items-center gap-0 md:gap-2 flex-col md:flex-row">
-                  <span class="font-fira text-xs md:text-sm text-hister-teal truncate overflow-hidden text-ellipsis whitespace-nowrap">{r.url}</span>
-                  {#if r.added}
-                    <span class="font-inter text-xs md:text-sm text-text-brand-muted" title={formatTimestamp(r.added)}>· {formatRelativeTime(r.added)}</span>
-                  {/if}
-                  <Button data-readable variant="link" size="sm" class="text-xs md:text-sm font-medium text-hister-indigo p-0 h-auto gap-0.5 shrink-0" onclick={(e) => openReadable(e, r.url, r.title || '*title*')}>
-                    <Eye class="size-3" /><span>view</span>
-                  </Button>
-                </div>
-                {#if r.text}
-                  <p class="font-inter text-text-brand-secondary text-sm md:text-base leading-[1.4]">{@html r.text}</p>
-                {/if}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                class="shrink-0 text-text-brand-muted hover:text-text-brand cursor-pointer"
-                onclick={() => { showActionsForResult = showActionsForResult === 'doc:' + r.url ? null : 'doc:' + r.url; }}
+          <div
+            class="font-inter text-text-brand-secondary flex flex-wrap items-center gap-2 text-sm md:gap-3"
+          >
+            <label class="flex items-center gap-1.5">
+              From:
+              <Input
+                type="date"
+                bind:value={dateFrom}
+                class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
+              />
+            </label>
+            <label class="flex items-center gap-1.5">
+              To:
+              <Input
+                type="date"
+                bind:value={dateTo}
+                class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
+              />
+            </label>
+          </div>
+
+          {#if lastResults?.history?.length}
+            {#each lastResults.history as r, i}
+              {@const favSrc = getFaviconSrc(r.favicon, r.url)}
+              <article
+                data-result
+                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150"
+                style={i === highlightIdx
+                  ? 'background: linear-gradient(90deg, transparent, rgba(90, 138, 138, 0.12), transparent); border-left: 3px solid var(--hister-teal); padding-left: 0.75rem;'
+                  : ''}
               >
-                <MoreVertical class="size-4" />
-              </Button>
-            </article>
-            {#if showActionsForResult === 'doc:' + r.url}
-              <Card.Root class="ml-8 border-[3px] border-brutal-border bg-card-surface rounded-none py-3 gap-2 shadow-[3px_3px_0_var(--brutal-shadow)]">
-                <Card.Content class="space-y-2">
+                <div
+                  class="bg-hister-teal mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
+                >
+                  {#if favSrc}
+                    <img
+                      src={favSrc}
+                      alt=""
+                      class="h-full w-full object-cover"
+                      onload={(e) => {
+                        (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
+                          'transparent';
+                      }}
+                      onerror={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
+                          'hidden',
+                        );
+                      }}
+                    />
+                    <Star class="hidden size-3 text-white" />
+                  {:else}
+                    <Star class="size-3 text-white" />
+                  {/if}
+                </div>
+                <div class="w-0 min-w-0 flex-1 space-y-0.5">
+                  <a
+                    data-result-link
+                    href={r.url}
+                    class="font-outfit text-md text-hister-teal block w-full overflow-hidden font-semibold text-ellipsis whitespace-nowrap hover:underline md:text-xl"
+                    onclick={(e) => {
+                      e.preventDefault();
+                      openResult(r.url, r.title || '*title*');
+                    }}
+                  >
+                    {@html r.title || '*title*'}
+                  </a>
                   <div class="flex items-center gap-2">
-                    <Input bind:value={actionsQuery} placeholder="Query for priority..." class="flex-1 h-7 text-sm font-inter border-[2px] border-border-brand-muted shadow-none focus-visible:ring-0 focus-visible:border-hister-indigo" />
-                    <Button variant="outline" size="sm" class="text-xs border-[2px] border-hister-indigo text-hister-indigo" onclick={() => updatePriorityResult(r.url, r.title || '*title*', false)}>
-                      <Pin class="size-3.5" />
-                      Pin
+                    <span
+                      class="font-fira text-hister-teal truncate overflow-hidden text-ellipsis whitespace-nowrap"
+                      >{r.url}</span
+                    >
+                    <Badge
+                      variant="secondary"
+                      class="bg-hister-teal/10 text-hister-teal h-4 border-0 px-1.5 py-0"
+                      >pinned</Badge
+                    >
+                    <Button
+                      data-readable
+                      variant="link"
+                      size="sm"
+                      class="text-hister-indigo h-auto shrink-0 gap-0.5 p-0 text-xs font-medium md:text-sm"
+                      onclick={(e) => openReadable(e, r.url, r.title || '*title*')}
+                    >
+                      <Eye class="size-3" /><span>view</span>
                     </Button>
                   </div>
-                  <Button variant="outline" size="sm" class="text-xs border-[2px] border-hister-rose text-hister-rose hover:bg-hister-rose/10" onclick={() => deleteResult(r.url)}>
-                    <Trash2 class="size-3.5" />
-                    Delete
-                  </Button>
-                  {#if actionsMessage}
-                    <p class="text-xs font-inter {actionsError ? 'text-hister-rose' : 'text-hister-teal'}">{actionsMessage}</p>
-                  {/if}
-                </Card.Content>
-              </Card.Root>
-            {/if}
-          {/each}
-        {/if}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-text-brand-muted hover:text-text-brand shrink-0 cursor-pointer"
+                  onclick={() => {
+                    showActionsForResult =
+                      showActionsForResult === 'history:' + r.url ? null : 'history:' + r.url;
+                  }}
+                >
+                  <MoreVertical class="size-4" />
+                </Button>
+              </article>
+              {#if showActionsForResult === 'history:' + r.url}
+                <Card.Root
+                  class="border-brutal-border bg-card-surface ml-8 gap-2 rounded-none border-[3px] py-3 shadow-[3px_3px_0_var(--brutal-shadow)]"
+                >
+                  <Card.Content class="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="border-hister-rose text-hister-rose hover:bg-hister-rose/10 border-[2px] text-xs"
+                      onclick={() => updatePriorityResult(r.url, r.title || '*title*', true)}
+                    >
+                      <PinOff class="size-3.5" />
+                      Remove priority
+                    </Button>
+                    {#if actionsMessage}
+                      <p
+                        class="font-inter text-xs {actionsError
+                          ? 'text-hister-rose'
+                          : 'text-hister-teal'}"
+                      >
+                        {actionsMessage}
+                      </p>
+                    {/if}
+                  </Card.Content>
+                </Card.Root>
+              {/if}
+            {/each}
+          {/if}
 
-        <Separator class="bg-border-brand-muted" />
-        <nav class="flex items-center gap-4 font-inter text-xs text-text-brand-muted">
-          <Download class="size-3.5" />
-          <span>Export:</span>
-          <Button variant="link" size="sm" class="text-xs text-hister-indigo p-0 h-auto" onclick={() => exportJSON(lastResults!)}>JSON</Button>
-          <Button variant="link" size="sm" class="text-xs text-hister-indigo p-0 h-auto" onclick={() => exportCSV(lastResults!, query)}>CSV</Button>
-          <Button variant="link" size="sm" class="text-xs text-hister-indigo p-0 h-auto" onclick={() => exportRSS(lastResults!, query)}>RSS</Button>
-        </nav>
-      {:else if query && lastResults}
-        <section class="text-center pmd:px-12 y-12">
-          <p class="font-inter text-text-brand-secondary mb-4">No results found for "<span class="font-semibold">{query}</span>"</p>
-          <Button variant="outline" class="border-[3px] border-hister-coral text-hister-coral hover:bg-hister-coral/10 font-inter font-semibold shadow-[3px_3px_0px_var(--hister-coral)]" href={getSearchUrl(config.searchUrl, query)}>
-            <ExternalLink class="size-4" />
-            Search
-          </Button>
-        </section>
-      {:else if query}
-        <div class="flex items-center justify-center py-16">
-          <span class="font-inter text-text-brand-muted">Searching...</span>
-        </div>
-      {/if}
+          {#if lastResults?.documents}
+            {#each lastResults.documents as r, i}
+              {@const idx = historyLen + i}
+              {@const color = 'hister-cyan'}
+              {@const favSrc = getFaviconSrc(r.favicon, r.url)}
+              <article
+                data-result
+                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150"
+                style={idx === highlightIdx
+                  ? `background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--${color}) 12%, transparent), transparent); border-left: 3px solid var(--${color}); padding-left: 0.75rem;`
+                  : ''}
+              >
+                <div
+                  class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
+                  style="background-color: var(--{color});"
+                >
+                  {#if favSrc}
+                    <img
+                      src={favSrc}
+                      alt=""
+                      class="h-full w-full object-cover"
+                      onload={(e) => {
+                        (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
+                          'transparent';
+                      }}
+                      onerror={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
+                          'hidden',
+                        );
+                      }}
+                    />
+                    <Globe class="hidden size-3 text-white" />
+                  {:else}
+                    <Globe class="size-3 text-white" />
+                  {/if}
+                </div>
+                <div class="w-0 min-w-0 flex-1 space-y-0.5">
+                  <a
+                    data-result-link
+                    href={r.url}
+                    class="font-outfit text-md block w-full font-semibold hover:underline md:text-xl"
+                    style="color: var(--{color});"
+                    onclick={(e) => {
+                      e.preventDefault();
+                      openResult(r.url, r.title || '*title*');
+                    }}
+                  >
+                    {@html r.title || '*title*'}
+                  </a>
+                  <div class="items-left flex flex-col gap-0 md:flex-row md:items-center md:gap-2">
+                    <span
+                      class="font-fira text-hister-teal truncate overflow-hidden text-xs text-ellipsis whitespace-nowrap md:text-sm"
+                      >{r.url}</span
+                    >
+                    {#if r.added}
+                      <span
+                        class="font-inter text-text-brand-muted text-xs md:text-sm"
+                        title={formatTimestamp(r.added)}>· {formatRelativeTime(r.added)}</span
+                      >
+                    {/if}
+                    <Button
+                      data-readable
+                      variant="link"
+                      size="sm"
+                      class="text-hister-indigo h-auto shrink-0 gap-0.5 p-0 text-xs font-medium md:text-sm"
+                      onclick={(e) => openReadable(e, r.url, r.title || '*title*')}
+                    >
+                      <Eye class="size-3" /><span>view</span>
+                    </Button>
+                  </div>
+                  {#if r.text}
+                    <p
+                      class="font-inter text-text-brand-secondary text-sm leading-[1.4] md:text-base"
+                    >
+                      {@html r.text}
+                    </p>
+                  {/if}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-text-brand-muted hover:text-text-brand shrink-0 cursor-pointer"
+                  onclick={() => {
+                    showActionsForResult =
+                      showActionsForResult === 'doc:' + r.url ? null : 'doc:' + r.url;
+                  }}
+                >
+                  <MoreVertical class="size-4" />
+                </Button>
+              </article>
+              {#if showActionsForResult === 'doc:' + r.url}
+                <Card.Root
+                  class="border-brutal-border bg-card-surface ml-8 gap-2 rounded-none border-[3px] py-3 shadow-[3px_3px_0_var(--brutal-shadow)]"
+                >
+                  <Card.Content class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <Input
+                        bind:value={actionsQuery}
+                        placeholder="Query for priority..."
+                        class="font-inter border-border-brand-muted focus-visible:border-hister-indigo h-7 flex-1 border-[2px] text-sm shadow-none focus-visible:ring-0"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        class="border-hister-indigo text-hister-indigo border-[2px] text-xs"
+                        onclick={() => updatePriorityResult(r.url, r.title || '*title*', false)}
+                      >
+                        <Pin class="size-3.5" />
+                        Pin
+                      </Button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      class="border-hister-rose text-hister-rose hover:bg-hister-rose/10 border-[2px] text-xs"
+                      onclick={() => deleteResult(r.url)}
+                    >
+                      <Trash2 class="size-3.5" />
+                      Delete
+                    </Button>
+                    {#if actionsMessage}
+                      <p
+                        class="font-inter text-xs {actionsError
+                          ? 'text-hister-rose'
+                          : 'text-hister-teal'}"
+                      >
+                        {actionsMessage}
+                      </p>
+                    {/if}
+                  </Card.Content>
+                </Card.Root>
+              {/if}
+            {/each}
+          {/if}
+
+          <Separator class="bg-border-brand-muted" />
+          <nav class="font-inter text-text-brand-muted flex items-center gap-4 text-xs">
+            <Download class="size-3.5" />
+            <span>Export:</span>
+            <Button
+              variant="link"
+              size="sm"
+              class="text-hister-indigo h-auto p-0 text-xs"
+              onclick={() => exportJSON(lastResults!)}>JSON</Button
+            >
+            <Button
+              variant="link"
+              size="sm"
+              class="text-hister-indigo h-auto p-0 text-xs"
+              onclick={() => exportCSV(lastResults!, query)}>CSV</Button
+            >
+            <Button
+              variant="link"
+              size="sm"
+              class="text-hister-indigo h-auto p-0 text-xs"
+              onclick={() => exportRSS(lastResults!, query)}>RSS</Button
+            >
+          </nav>
+        {:else if query && lastResults}
+          <section class="pmd:px-12 y-12 text-center">
+            <p class="font-inter text-text-brand-secondary mb-4">
+              No results found for "<span class="font-semibold">{query}</span>"
+            </p>
+            <Button
+              variant="outline"
+              class="border-hister-coral text-hister-coral hover:bg-hister-coral/10 font-inter border-[3px] font-semibold shadow-[3px_3px_0px_var(--hister-coral)]"
+              href={getSearchUrl(config.searchUrl, query)}
+            >
+              <ExternalLink class="size-4" />
+              Search
+            </Button>
+          </section>
+        {:else if query}
+          <div class="flex items-center justify-center py-16">
+            <span class="font-inter text-text-brand-muted">Searching...</span>
+          </div>
+        {/if}
       </div>
     </ScrollArea>
   </div>
 {:else}
-  <div class="flex-1 flex flex-col items-center gap-5 md:gap-10 py-4 md:py-12 px-4 md:px-12 overflow-y-auto relative">
-
+  <div
+    class="relative flex flex-1 flex-col items-center gap-5 overflow-y-auto px-4 py-4 md:gap-10 md:px-12 md:py-12"
+  >
     <h1
       bind:this={heroTitleEl}
-      class="font-outfit font-black text-5xl md:text-9xl leading-none tracking-[8px] bg-clip-text text-transparent select-none"
+      class="font-outfit bg-clip-text text-5xl leading-none font-black tracking-[8px] text-transparent select-none md:text-9xl"
       style="background-image: linear-gradient(90deg, var(--hister-indigo), var(--hister-coral), var(--hister-teal), var(--hister-indigo)); background-size: 300% 100%; background-position: 0% 50%;"
     >
       HISTER
     </h1>
 
-    <p class="font-inter text-md md:text-lg text-text-brand-secondary">
-      Your own search engine
-    </p>
+    <p class="font-inter text-md text-text-brand-secondary md:text-lg">Your own search engine</p>
     <div
       bind:this={underlineEl}
       class="h-[3px] w-48"
       style="background: linear-gradient(90deg, var(--hister-indigo), var(--hister-coral), var(--hister-teal)); transform: scaleX(0); transform-origin: left;"
     ></div>
 
-    <div bind:this={searchBoxEl} class="search-box-gradient w-full max-w-[1200px] p-[3px] shadow-[4px_4px_0px_var(--hister-coral)]">
-      <div class="h-10 md:h-14 flex items-center gap-3 pl-4 bg-card-surface">
-        <Search class="size-6 text-text-brand-muted" />
+    <div
+      bind:this={searchBoxEl}
+      class="search-box-gradient w-full max-w-[1200px] p-[3px] shadow-[4px_4px_0px_var(--hister-coral)]"
+    >
+      <div class="bg-card-surface flex h-10 items-center gap-3 pl-4 md:h-14">
+        <Search class="text-text-brand-muted size-6" />
         <Input
           bind:ref={inputEl}
           bind:value={query}
           placeholder="Search ..."
-          class="flex-1 h-full bg-transparent font-inter md:text-lg text-text-brand placeholder:text-text-brand-muted border-0 shadow-none focus-visible:ring-0 p-0 min-w-0"
+          class="font-inter text-text-brand placeholder:text-text-brand-muted h-full min-w-0 flex-1 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 md:text-lg"
         />
-        <div class="w-2.5 h-2.5 mr-4 shrink-0 pulse-dot {connected ? 'bg-hister-teal' : 'bg-hister-rose'}" title={connected ? 'Connected' : 'Disconnected'}></div>
+        <div
+          class="pulse-dot mr-4 h-2.5 w-2.5 shrink-0 {connected
+            ? 'bg-hister-teal'
+            : 'bg-hister-rose'}"
+          title={connected ? 'Connected' : 'Disconnected'}
+        ></div>
       </div>
     </div>
 
-    <div bind:this={hintEl} class="hidden md:flex items-center gap-1 md:gap-2 font-inter text-xs text-text-brand-muted">
+    <div
+      bind:this={hintEl}
+      class="font-inter text-text-brand-muted hidden items-center gap-1 text-xs md:flex md:gap-2"
+    >
       <span>Pro tip: Press</span>
-      <Kbd bind:ref={kbdEl} class="bg-muted-surface border-[2px] border-border-brand-muted px-2 py-0.5 font-fira text-xs font-semibold text-text-brand-secondary rounded-none">/</Kbd>
+      <Kbd
+        bind:ref={kbdEl}
+        class="bg-muted-surface border-border-brand-muted font-fira text-text-brand-secondary rounded-none border-[2px] px-2 py-0.5 text-xs font-semibold"
+        >/</Kbd
+      >
       <span>to focus search anywhere</span>
     </div>
 
     {#if recentSearches.length > 0}
-      <div bind:this={chipsContainerEl} class="flex flex-wrap gap-3 items-center justify-center relative">
+      <div
+        bind:this={chipsContainerEl}
+        class="relative flex flex-wrap items-center justify-center gap-3"
+      >
         {#each recentSearches as search, i}
           {@const chip = chipColors[i % chipColors.length]}
           <Button
             variant="outline"
-            class="border-[3px] {chip.border} {chip.bg} px-3.5 py-1.5 font-inter text-sm font-semibold {chip.text} brutal-press h-auto rounded-none"
+            class="border-[3px] {chip.border} {chip.bg} font-inter px-3.5 py-1.5 text-sm font-semibold {chip.text} brutal-press h-auto rounded-none"
             onclick={() => clickChip(search)}
             oncontextmenu={(e) => showChipContextMenu(e, search)}
           >
@@ -811,7 +1116,7 @@
         <Button
           variant="ghost"
           size="sm"
-          class="border-[2px] border-hister-rose/40 px-2.5 py-1.5 font-inter text-xs font-semibold text-hister-rose/60 hover:text-hister-rose hover:border-hister-rose hover:bg-hister-rose/10 transition-all duration-200 h-auto rounded-none"
+          class="border-hister-rose/40 font-inter text-hister-rose/60 hover:text-hister-rose hover:border-hister-rose hover:bg-hister-rose/10 h-auto rounded-none border-[2px] px-2.5 py-1.5 text-xs font-semibold transition-all duration-200"
           onclick={deleteAllRecentSearches}
           title="Clear all recent searches"
         >
@@ -824,24 +1129,32 @@
       <div
         class="fixed inset-0 z-40"
         role="presentation"
-        onclick={() => { contextMenuSearch = null; }}
-        oncontextmenu={(e) => { e.preventDefault(); contextMenuSearch = null; }}
+        onclick={() => {
+          contextMenuSearch = null;
+        }}
+        oncontextmenu={(e) => {
+          e.preventDefault();
+          contextMenuSearch = null;
+        }}
       ></div>
       <div
-        class="fixed z-50 border-[3px] border-brutal-border bg-card-surface shadow-[4px_4px_0_var(--brutal-shadow)] py-1 min-w-[160px]"
+        class="border-brutal-border bg-card-surface fixed z-50 min-w-[160px] border-[3px] py-1 shadow-[4px_4px_0_var(--brutal-shadow)]"
         style="left: {contextMenuPos.x}px; top: {contextMenuPos.y}px;"
       >
         <Button
           variant="ghost"
-          class="w-full justify-start gap-2 px-3 py-2 font-inter text-sm text-text-brand hover:bg-muted-surface h-auto rounded-none"
-          onclick={() => { clickChip(contextMenuSearch!); contextMenuSearch = null; }}
+          class="font-inter text-text-brand hover:bg-muted-surface h-auto w-full justify-start gap-2 rounded-none px-3 py-2 text-sm"
+          onclick={() => {
+            clickChip(contextMenuSearch!);
+            contextMenuSearch = null;
+          }}
         >
           <Search class="size-3.5" /> Search "{contextMenuSearch}"
         </Button>
         <Separator class="bg-border-brand-muted mx-2" />
         <Button
           variant="ghost"
-          class="w-full justify-start gap-2 px-3 py-2 font-inter text-sm text-hister-rose hover:bg-hister-rose/10 h-auto rounded-none"
+          class="font-inter text-hister-rose hover:bg-hister-rose/10 h-auto w-full justify-start gap-2 rounded-none px-3 py-2 text-sm"
           onclick={() => deleteRecentSearch(contextMenuSearch!)}
         >
           <Trash2 class="size-3.5" /> Remove
@@ -849,24 +1162,32 @@
       </div>
     {/if}
 
-    <div bind:this={statsRowEl} class="flex items-center gap-3 md:gap-8 flex-col md:flex-row">
-      <div class="flex items-center gap-2 border-[3px] border-brutal-border px-4 py-2 shadow-brutal-sm" style="color: var(--hister-indigo);">
+    <div bind:this={statsRowEl} class="flex flex-col items-center gap-3 md:flex-row md:gap-8">
+      <div
+        class="border-brutal-border shadow-brutal-sm flex items-center gap-2 border-[3px] px-4 py-2"
+        style="color: var(--hister-indigo);"
+      >
         <History class="size-3 md:size-4.5" />
         <span class="font-outfit text-xl font-extrabold">{displayHistoryCount}</span>
         <span class="font-inter text-sm">indexed pages</span>
       </div>
-      <div class="flex items-center gap-2 border-[3px] border-brutal-border px-4 py-2 shadow-brutal-sm" style="color: var(--hister-teal);">
+      <div
+        class="border-brutal-border shadow-brutal-sm flex items-center gap-2 border-[3px] px-4 py-2"
+        style="color: var(--hister-teal);"
+      >
         <Shield class="size-3 md:size-4.5" />
         <span class="font-outfit text-xl font-extrabold">{displayRulesCount}</span>
         <span class="font-inter text-sm">active rules</span>
       </div>
-      <div class="flex items-center gap-2 border-[3px] border-brutal-border px-4 py-2 shadow-brutal-sm" style="color: var(--hister-coral);">
+      <div
+        class="border-brutal-border shadow-brutal-sm flex items-center gap-2 border-[3px] px-4 py-2"
+        style="color: var(--hister-coral);"
+      >
         <Link2 class="size-3 md:size-4.5" />
         <span class="font-outfit text-xl font-extrabold">{displayAliasesCount}</span>
         <span class="font-inter text-sm">aliases</span>
       </div>
     </div>
-
   </div>
 {/if}
 
@@ -875,16 +1196,33 @@
     animation: pulse-throb 6s ease-in-out infinite;
   }
   @keyframes pulse-throb {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.6); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.6);
+    }
   }
   .search-box-gradient {
-    background: linear-gradient(90deg, var(--hister-indigo), var(--hister-coral), var(--hister-teal), var(--hister-indigo));
+    background: linear-gradient(
+      90deg,
+      var(--hister-indigo),
+      var(--hister-coral),
+      var(--hister-teal),
+      var(--hister-indigo)
+    );
     background-size: 300% 100%;
     animation: gradient-slide 6s ease-in-out infinite alternate;
   }
   @keyframes gradient-slide {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
   }
 </style>

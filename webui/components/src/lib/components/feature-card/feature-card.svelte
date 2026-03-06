@@ -27,24 +27,31 @@
   } = $props();
 </script>
 
-<div class={cn(
-  bg, 'p-7 border-[3px] border-brutal-border shadow-brutal-lg',
-  horizontal ? 'flex items-center gap-5' : 'flex flex-col gap-4',
-  className,
-)}>
+<div
+  class={cn(
+    bg,
+    'border-brutal-border shadow-brutal-lg border-[3px] p-7',
+    horizontal ? 'flex items-center gap-5' : 'flex flex-col gap-4',
+    className,
+  )}
+>
   {#if icon}
     {@const Icon = icon}
-    <div class={cn(iconBg, 'w-12 h-12 flex items-center justify-center', horizontal && 'shrink-0')}>
+    <div class={cn(iconBg, 'flex h-12 w-12 items-center justify-center', horizontal && 'shrink-0')}>
       <Icon size={24} class={iconColor} />
     </div>
   {/if}
   {#if horizontal}
     <div class="flex flex-col gap-2">
-      <h3 class="{textColor} font-space text-xl md:text-3xl font-extrabold tracking-[1px]">{title}</h3>
-      <p class="{descColor} font-inter text-sm md:text-lg leading-relaxed">{description}</p>
+      <h3 class="{textColor} font-space text-xl font-extrabold tracking-[1px] md:text-3xl">
+        {title}
+      </h3>
+      <p class="{descColor} font-inter text-sm leading-relaxed md:text-lg">{description}</p>
     </div>
   {:else}
-    <h3 class="{textColor} font-space text-xl md:text-3xl font-extrabold tracking-[1px]">{title}</h3>
-    <p class="{descColor} font-inter text-sm md:text-lg leading-relaxed">{description}</p>
+    <h3 class="{textColor} font-space text-xl font-extrabold tracking-[1px] md:text-3xl">
+      {title}
+    </h3>
+    <p class="{descColor} font-inter text-sm leading-relaxed md:text-lg">{description}</p>
   {/if}
 </div>

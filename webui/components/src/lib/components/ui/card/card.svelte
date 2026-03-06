@@ -1,38 +1,40 @@
 <script lang="ts">
-	import type { HTMLAttributes } from "svelte/elements";
-	import { cn, type WithElementRef } from "@hister/components/utils";
+  import type { HTMLAttributes } from 'svelte/elements';
+  import { cn, type WithElementRef } from '@hister/components/utils';
 
-	let {
-		ref = $bindable(null),
-		color,
-		href,
-		target,
-		rel,
-		class: className,
-		children,
-		...restProps
-	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-		color?: string;
-		href?: string;
-		target?: string;
-		rel?: string;
-	} = $props();
+  let {
+    ref = $bindable(null),
+    color,
+    href,
+    target,
+    rel,
+    class: className,
+    children,
+    ...restProps
+  }: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
+    color?: string;
+    href?: string;
+    target?: string;
+    rel?: string;
+  } = $props();
 </script>
 
 <svelte:element
-	this={href ? 'a' : 'div'}
-	bind:this={ref}
-	data-slot="card"
-	{href}
-	{target}
-	{rel}
-	class={cn(
-		"bg-card-surface text-card-foreground border-[3px] border-brutal-border rounded-none py-0 gap-0 overflow-hidden flex flex-col shadow-[6px_6px_0_var(--brutal-shadow)]",
-		href && "brutal-press-card no-underline block",
-		className
-	)}
-	style={color ? `border-color: var(--${color}); box-shadow: 6px 6px 0 var(--${color});` : undefined}
-	{...restProps}
+  this={href ? 'a' : 'div'}
+  bind:this={ref}
+  data-slot="card"
+  {href}
+  {target}
+  {rel}
+  class={cn(
+    'bg-card-surface text-card-foreground border-brutal-border flex flex-col gap-0 overflow-hidden rounded-none border-[3px] py-0 shadow-[6px_6px_0_var(--brutal-shadow)]',
+    href && 'brutal-press-card block no-underline',
+    className,
+  )}
+  style={color
+    ? `border-color: var(--${color}); box-shadow: 6px 6px 0 var(--${color});`
+    : undefined}
+  {...restProps}
 >
-	{@render children?.()}
+  {@render children?.()}
 </svelte:element>

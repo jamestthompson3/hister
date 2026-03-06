@@ -26,7 +26,7 @@
     toc = Array.from(headings).map((h) => ({
       id: h.id,
       text: h.textContent ?? '',
-      level: h.tagName === 'H2' ? 2 : 3
+      level: h.tagName === 'H2' ? 2 : 3,
     }));
 
     const observer = new IntersectionObserver(
@@ -37,7 +37,7 @@
           }
         }
       },
-      { rootMargin: '-80px 0px -60% 0px', threshold: 0 }
+      { rootMargin: '-80px 0px -60% 0px', threshold: 0 },
     );
 
     headings.forEach((h) => observer.observe(h));
@@ -50,26 +50,24 @@
 </svelte:head>
 
 <div class="flex gap-10">
-  <article class="flex-1 min-w-0" data-doc-content>
+  <article class="min-w-0 flex-1" data-doc-content>
     <div class="content doc-content">
       <data.content />
     </div>
 
     <!-- Prev / Next -->
-    <Separator class="mt-12 bg-brutal-border h-0.75" />
-    <nav class="pt-8 flex items-center justify-between gap-4">
+    <Separator class="bg-brutal-border mt-12 h-0.75" />
+    <nav class="flex items-center justify-between gap-4 pt-8">
       {#if data.prev}
         <Button
           variant="ghost"
           href="/docs/{data.prev.slug}"
-          class="group flex items-center gap-3 no-underline text-(--text-secondary) hover:text-(--text-primary) transition-colors h-auto rounded-none px-2 py-2"
+          class="group flex h-auto items-center gap-3 rounded-none px-2 py-2 text-(--text-secondary) no-underline transition-colors hover:text-(--text-primary)"
         >
-          <ArrowLeft
-            size={18}
-            class="transition-transform group-hover:-translate-x-1"
-          />
+          <ArrowLeft size={18} class="transition-transform group-hover:-translate-x-1" />
           <div class="flex flex-col items-start">
-            <span class="font-space text-[10px] font-bold tracking-[2px] uppercase text-(--text-secondary)"
+            <span
+              class="font-space text-[10px] font-bold tracking-[2px] text-(--text-secondary) uppercase"
               >Previous</span
             >
             <span class="font-inter text-sm font-semibold">{data.prev.title}</span>
@@ -83,18 +81,16 @@
         <Button
           variant="ghost"
           href="/docs/{data.next.slug}"
-          class="group flex items-center gap-3 no-underline text-(--text-secondary) hover:text-(--text-primary) transition-colors text-right h-auto rounded-none px-2 py-2"
+          class="group flex h-auto items-center gap-3 rounded-none px-2 py-2 text-right text-(--text-secondary) no-underline transition-colors hover:text-(--text-primary)"
         >
           <div class="flex flex-col items-end">
-            <span class="font-space text-[10px] font-bold tracking-[2px] uppercase text-(--text-secondary)"
+            <span
+              class="font-space text-[10px] font-bold tracking-[2px] text-(--text-secondary) uppercase"
               >Next</span
             >
             <span class="font-inter text-sm font-semibold">{data.next.title}</span>
           </div>
-          <ArrowRight
-            size={18}
-            class="transition-transform group-hover:translate-x-1"
-          />
+          <ArrowRight size={18} class="transition-transform group-hover:translate-x-1" />
         </Button>
       {:else}
         <div></div>
@@ -104,21 +100,21 @@
 
   <!-- TOC Sidebar (xl only) -->
   {#if toc.length > 0}
-    <aside class="w-48 shrink-0 hidden xl:block">
+    <aside class="hidden w-48 shrink-0 xl:block">
       <nav class="sticky top-24 flex flex-col gap-0.5">
         <span
-          class="font-space text-[10px] font-bold tracking-[2px] uppercase text-(--text-secondary) mb-3"
+          class="font-space mb-3 text-[10px] font-bold tracking-[2px] text-(--text-secondary) uppercase"
           >On This Page</span
         >
         {#each toc as entry}
           <Button
             variant="ghost"
             href="#{entry.id}"
-            class="justify-start font-inter text-[13px] py-1 no-underline transition-colors border-l-2 h-auto rounded-none whitespace-normal text-left
+            class="font-inter h-auto justify-start rounded-none border-l-2 py-1 text-left text-[13px] whitespace-normal no-underline transition-colors
               {entry.level === 3 ? 'pl-5' : 'pl-3'}
               {activeId === entry.id
-              ? 'border-hister-indigo text-(--text-primary) font-medium'
-              : 'border-transparent text-(--text-secondary) hover:text-(--text-primary) hover:border-brutal-border'}"
+              ? 'border-hister-indigo font-medium text-(--text-primary)'
+              : 'hover:border-brutal-border border-transparent text-(--text-secondary) hover:text-(--text-primary)'}"
           >
             {entry.text}
           </Button>

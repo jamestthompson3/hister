@@ -8,7 +8,7 @@
   const categoryColors: Record<string, string> = {
     'Getting Started': 'bg-hister-indigo',
     Reference: 'bg-hister-teal',
-    Deployment: 'bg-hister-coral'
+    Deployment: 'bg-hister-coral',
   };
 </script>
 
@@ -16,24 +16,26 @@
   <title>Documentation | Hister</title>
 </svelte:head>
 
-<section class="max-w-4xl mx-auto px-6 md:px-12 py-12">
-  <h1 class="font-space text-4xl md:text-5xl font-black tracking-[-1px] uppercase text-(--text-primary) mb-10">
+<section class="mx-auto max-w-4xl px-6 py-12 md:px-12">
+  <h1
+    class="font-space mb-10 text-4xl font-black tracking-[-1px] text-(--text-primary) uppercase md:text-5xl"
+  >
     Documentation
   </h1>
 
   {#each data.categories as category}
     <div class="mb-8">
-      <div class="flex items-center gap-2 mb-3">
-        <div class="w-2.5 h-2.5 {categoryColors[category.name] ?? 'bg-brutal-border'}"></div>
-        <span class="font-space text-xs font-bold tracking-[2px] uppercase text-(--text-secondary)">
+      <div class="mb-3 flex items-center gap-2">
+        <div class="h-2.5 w-2.5 {categoryColors[category.name] ?? 'bg-brutal-border'}"></div>
+        <span class="font-space text-xs font-bold tracking-[2px] text-(--text-secondary) uppercase">
           {category.name}
         </span>
       </div>
 
-      <ul class="flex flex-col gap-3 list-none m-0 p-0">
+      <ul class="m-0 flex list-none flex-col gap-3 p-0">
         {#each category.docs as doc}
           <li>
-            <Card.Root href="/docs/{doc.slug}/" class="p-5 bg-brutal-card">
+            <Card.Root href="/docs/{doc.slug}/" class="bg-brutal-card p-5">
               <h2 class="font-space text-lg font-extrabold tracking-[0.5px] text-(--text-primary)">
                 {doc.title}
               </h2>
@@ -45,22 +47,22 @@
   {/each}
 
   <div class="mb-8">
-    <div class="flex items-center gap-2 mb-3">
-      <div class="w-2.5 h-2.5 bg-hister-indigo"></div>
-      <span class="font-space text-xs font-bold tracking-[2px] uppercase text-(--text-secondary)">
+    <div class="mb-3 flex items-center gap-2">
+      <div class="bg-hister-indigo h-2.5 w-2.5"></div>
+      <span class="font-space text-xs font-bold tracking-[2px] text-(--text-secondary) uppercase">
         Browser Extensions
       </span>
     </div>
 
-    <ul class="flex flex-col gap-3 list-none m-0 p-0">
+    <ul class="m-0 flex list-none flex-col gap-3 p-0">
       <li>
         <Card.Root
           href="https://chromewebstore.google.com/detail/hister/cciilamhchpmbdnniabclekddabkifhb"
           target="_blank"
           rel="noopener noreferrer"
-          class="p-5 bg-brutal-card flex-row items-center gap-4"
+          class="bg-brutal-card flex-row items-center gap-4 p-5"
         >
-          <Chrome size={20} class="text-(--text-secondary) shrink-0" />
+          <Chrome size={20} class="shrink-0 text-(--text-secondary)" />
           <h2 class="font-space text-lg font-extrabold tracking-[0.5px] text-(--text-primary)">
             Chrome Extension
           </h2>
@@ -71,9 +73,9 @@
           href="https://addons.mozilla.org/en-US/firefox/addon/hister/"
           target="_blank"
           rel="noopener noreferrer"
-          class="p-5 bg-brutal-card flex-row items-center gap-4"
+          class="bg-brutal-card flex-row items-center gap-4 p-5"
         >
-          <Globe size={20} class="text-(--text-secondary) shrink-0" />
+          <Globe size={20} class="shrink-0 text-(--text-secondary)" />
           <h2 class="font-space text-lg font-extrabold tracking-[0.5px] text-(--text-primary)">
             Firefox Add-on
           </h2>

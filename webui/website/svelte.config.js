@@ -5,8 +5,21 @@ import { createHighlighter } from 'shiki';
 
 const theme = 'github-dark';
 const langs = [
-  'bash', 'shell', 'yaml', 'json', 'javascript', 'typescript', 'html', 'css',
-  'nginx', 'nix', 'go', 'text', 'plaintext', 'markdown', 'dockerfile'
+  'bash',
+  'shell',
+  'yaml',
+  'json',
+  'javascript',
+  'typescript',
+  'html',
+  'css',
+  'nginx',
+  'nix',
+  'go',
+  'text',
+  'plaintext',
+  'markdown',
+  'dockerfile',
 ];
 const langAliases = { textplain: 'text', caddy: 'text' };
 const highlighter = await createHighlighter({ themes: [theme], langs });
@@ -23,15 +36,18 @@ export default {
         highlighter: (code, lang) => {
           const resolved = langAliases[lang] || lang || 'text';
           const html = escapeSvelte(
-            highlighter.codeToHtml(code, { lang: loadedLangs.has(resolved) ? resolved : 'text', theme })
+            highlighter.codeToHtml(code, {
+              lang: loadedLangs.has(resolved) ? resolved : 'text',
+              theme,
+            }),
           );
           return `{@html \`${html}\` }`;
-        }
-      }
-    })
+        },
+      },
+    }),
   ],
   kit: {
     adapter: adapter({ pages: 'build', assets: 'build', fallback: undefined }),
-    prerender: { handleHttpError: 'warn', handleMissingId: 'ignore' }
-  }
+    prerender: { handleHttpError: 'warn', handleMissingId: 'ignore' },
+  },
 };
