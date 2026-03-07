@@ -4,6 +4,10 @@ draft: false
 title: 'Troubleshooting'
 ---
 
+We are sorry that you are here. 🙁 Fingers crossed it won't be for long?
+
+If all else fails, you can try asking for help&mdash;see the Community links in this page's footer.
+
 ## Common Issues
 
 ### Server won't start
@@ -11,16 +15,21 @@ title: 'Troubleshooting'
 - Check if port 4433 (or whatever was configured instead) is already in use
 - Verify the configuration file syntax
 
+### Web interface loads, but looks broken
+
+If the main text loads, but seems jumbled up, and (most) images don't load, check that the `base_url` is correct in the server's config.
+(Trailing slashes should be irrelevant, but you can try fiddling with them in the config and/or the browser's address bar; please file a bug report if this fixes the issue.)
+
 ### Extension not connecting
 
-- Ensure your Hister server is running
-- Verify the extension is configured with the correct server URL
+- Ensure your Hister server is running and up to date
+- Verify the extension is configured with the correct server URL (should be the same as `base_url` in the server's config)
 - Check browser console for errors (also, see below for debugging the extension itself)
 - Check firewall settings
 
 ### Browser import fails
 
-- Ensure your Hister server is running
+- Ensure your Hister server is running and up to date
 
 ## Debugging the Web Extension
 
