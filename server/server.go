@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -107,7 +108,7 @@ func parseStaticFiles(baseDir string) error {
 func recParseStaticFiles(entries []iofs.DirEntry, dir, baseDir string) error {
 	for _, e := range entries {
 		if e.IsDir() {
-			subDir := filepath.Join(dir, e.Name())
+			subDir := path.Join(dir, e.Name())
 			sd, err := static.FS.ReadDir(subDir)
 			if err != nil {
 				return err
@@ -119,7 +120,7 @@ func recParseStaticFiles(entries []iofs.DirEntry, dir, baseDir string) error {
 		}
 		fn := e.Name()
 		if strings.HasSuffix(fn, ".html") || strings.HasSuffix(fn, ".js") || strings.HasSuffix(fn, ".css") {
-			p := filepath.Join(dir, fn)
+			p := path.Join(dir, fn)
 			c, err := static.FS.ReadFile(p)
 			if err != nil {
 				return err
