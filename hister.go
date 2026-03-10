@@ -320,7 +320,6 @@ func initConfig() {
 		if err := cfg.UpdateBaseURL(v); err != nil {
 			exit(1, "Failed to initialize config: "+err.Error())
 		}
-		fmt.Println(cfg.Server.BaseURL)
 	}
 }
 
