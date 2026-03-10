@@ -223,7 +223,7 @@ var reindexCmd = &cobra.Command{
 		if b, err := cmd.Flags().GetBool("exclude-sensitive"); err == nil {
 			skipSensitive = b
 		}
-		err := indexer.Reindex(cfg.FullPath(""), cfg.Rules, skipSensitive)
+		err := indexer.Reindex(cfg.FullPath(""), cfg.Rules, skipSensitive, cfg.Indexer.DetectLanguages)
 		if err != nil {
 			exit(1, "Indexer error: "+err.Error())
 		}

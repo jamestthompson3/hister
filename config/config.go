@@ -31,6 +31,7 @@ type Config struct {
 	fname                    string
 	App                      App               `yaml:"app" mapstructure:"app"`
 	Server                   Server            `yaml:"server" mapstructure:"server"`
+	Indexer                  Indexer           `yaml:"indexer" mapstructure:"indexer"`
 	Hotkeys                  Hotkeys           `yaml:"hotkeys" mapstructure:"hotkeys"`
 	TUI                      TUI               `yaml:"-" mapstructure:"tui"`
 	SensitiveContentPatterns map[string]string `yaml:"sensitive_content_patterns" mapstructure:"sensitive_content_patterns"`
@@ -60,6 +61,10 @@ type Server struct {
 	Address  string `yaml:"address" mapstructure:"address"`
 	BaseURL  string `yaml:"base_url" mapstructure:"base_url"`
 	Database string `yaml:"database" mapstructure:"database"`
+}
+
+type Indexer struct {
+	DetectLanguages bool `yaml:"detect_languages" mapstructure:"detect_languages"`
 }
 
 type Hotkeys struct {
@@ -278,6 +283,9 @@ func CreateDefaultConfig() *Config {
 		Server: Server{
 			Address:  "127.0.0.1:4433",
 			Database: "db.sqlite3",
+		},
+		Indexer: Indexer{
+			DetectLanguages: true,
 		},
 		Hotkeys: Hotkeys{
 			Web: map[string]string{

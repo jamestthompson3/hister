@@ -98,7 +98,7 @@ func Init(cfg *config.Config) error {
 	}
 	sensitiveContentRe = regexp.MustCompile(fmt.Sprintf("(%s)", strings.Join(sp, "|")))
 	var err error
-	i, err = initializeIndexer(cfg.FullPath(""), true)
+	i, err = initializeIndexer(cfg.FullPath(""), cfg.Indexer.DetectLanguages)
 	if err != nil {
 		return err
 	}
@@ -164,8 +164,8 @@ func init() {
 	sanitizer = bluemonday.StrictPolicy()
 }
 
-func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) error {
-	idx, err := initializeIndexer(basePath, true)
+func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool, detectLanguages bool) error {
+	idx, err := initializeIndexer(basePath, detectLanguages)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func Reindex(basePath string, rules *config.Rules, skipSensitiveChecks bool) err
 			return err
 		}
 	}
-	tmpIdx, err := initializeIndexer(tmpBasePath, true)
+	tmpIdx, err := initializeIndexer(tmpBasePath, detectLanguages)
 	if err != nil {
 		return err
 	}
