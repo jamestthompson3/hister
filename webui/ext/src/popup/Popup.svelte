@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Button } from '@hister/components/ui/button';
-  import { Input } from '@hister/components/ui/input';
   import { Label } from '@hister/components/ui/label';
   import { Switch } from '@hister/components/ui/switch';
   import * as Card from '@hister/components/ui/card';
+  import SettingsInput from '../options/SettingsInput.svelte';
 
   const defaultURL = 'http://127.0.0.1:4433/';
 
@@ -114,38 +114,31 @@
     </Card.Header>
     <Card.Content class="space-y-4 p-5">
       <form onsubmit={save} class="space-y-4">
-        <div class="space-y-1.5">
-          <Label class="font-outfit text-text-brand text-xs font-bold">Server URL</Label>
-          <Input
-            id="url"
-            type="text"
-            bind:value={url}
-            placeholder="http://127.0.0.1:4433/"
-            class="bg-page-bg border-brutal-border font-fira text-text-brand placeholder:text-text-brand-muted focus-visible:border-hister-indigo h-9 border-[3px] px-3 text-xs shadow-none transition-colors focus-visible:ring-0"
-          />
-        </div>
+        <SettingsInput
+          label="Server URL"
+          bind:value={url}
+          placeholder="http://127.0.0.1:4433/"
+        />
 
-        <div class="space-y-1.5">
-          <Label class="font-outfit text-text-brand text-xs font-bold">Access Token</Label>
-          {#if showTokenInput}
-            <Input
-              id="token"
-              type="text"
-              bind:value={token}
-              placeholder="Optional..."
-              class="bg-page-bg border-brutal-border font-fira text-text-brand placeholder:text-text-brand-muted focus-visible:border-hister-indigo h-9 border-[3px] px-3 text-xs shadow-none transition-colors focus-visible:ring-0"
-            />
-          {:else}
+        {#if showTokenInput}
+          <SettingsInput
+            label="Access Token"
+            bind:value={token}
+            placeholder="Optional..."
+          />
+        {:else}
+          <div class="space-y-2">
+            <Label class="font-outfit text-text-brand text-sm font-bold">Access Token</Label>
             <Button
               type="button"
               variant="outline"
               onclick={changeToken}
-              class="border-brutal-border font-outfit hover:border-hister-indigo h-9 w-full border-[3px] text-xs font-bold tracking-wide transition-all"
+              class="border-brutal-border font-outfit hover:border-hister-indigo h-12 w-full border-[3px] text-sm font-bold tracking-wide transition-all"
             >
               Change token
             </Button>
-          {/if}
-        </div>
+          </div>
+        {/if}
 
         <div class="flex items-center justify-between pt-1">
           <Label
