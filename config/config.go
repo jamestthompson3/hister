@@ -354,7 +354,7 @@ func (c *Config) init() error {
 		dir := u.HomeDir
 		c.App.Directory = filepath.Join(dir, c.App.Directory[2:])
 	}
-	if err := os.MkdirAll(c.App.Directory, os.ModePerm); err != nil {
+	if err := os.MkdirAll(c.App.Directory, 0o750); err != nil {
 		isPermissionErr := errors.Is(err, os.ErrPermission) ||
 			strings.Contains(strings.ToLower(err.Error()), "permission denied") ||
 			strings.Contains(strings.ToLower(err.Error()), "operation not permitted")
@@ -374,7 +374,7 @@ func (c *Config) init() error {
 			c.App.Directory = "/var/lib/hister"
 		}
 
-		err = os.MkdirAll(c.App.Directory, os.ModePerm)
+		err = os.MkdirAll(c.App.Directory, 0o750)
 		if err != nil {
 			return err
 		}
@@ -386,7 +386,7 @@ func (c *Config) init() error {
 	b, err := os.ReadFile(sPath)
 	if err != nil {
 		c.secretKey = []byte(rand.Text() + rand.Text())
-		if err := os.WriteFile(sPath, c.secretKey, 0o644); err != nil {
+		if err := os.WriteFile(sPath, c.secretKey, 0o600); err != nil {
 			return fmt.Errorf("failed to create secret key file: %w", err)
 		}
 	} else {
@@ -526,10 +526,14 @@ func (c *Config) Filename() string {
 func (c *Config) SaveTUIConfig() error {
 	if c.fname == "" {
 		c.fname = c.defaultConfigPath()
-		os.MkdirAll(filepath.Dir(c.fname), 0o755)
+		if err := os.MkdirAll(filepath.Dir(c.fname), 0o755); err != nil {
+			return err
+		}
 	}
 	tuiPath := filepath.Join(filepath.Dir(c.fname), "tui.yaml")
-	os.MkdirAll(filepath.Dir(tuiPath), 0o755)
+	if err := os.MkdirAll(filepath.Dir(tuiPath), 0o755); err != nil {
+		return err
+	}
 	v := viper.New()
 	v.SetConfigType("yaml")
 	v.Set("dark_theme", c.TUI.DarkTheme)
@@ -681,11 +685,10 @@ func (c *Config) LoadRules() error {
 }
 
 func (c *Config) SaveRules() error {
-	f, err := os.OpenFile(c.RulesPath(), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, os.ModePerm)
+	f, err := os.OpenFile(c.RulesPath(), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 	if c.Rules == nil {
 		c.Rules = &Rules{
 			Skip:     &Rule{ReStrs: make([]string, 0)},
@@ -695,8 +698,11 @@ func (c *Config) SaveRules() error {
 	}
 	e := json.NewEncoder(f)
 	e.SetIndent("", "  ")
-	err = e.Encode(c.Rules)
-	if err != nil {
+	if err = e.Encode(c.Rules); err != nil {
+		_ = f.Close()
+		return err
+	}
+	if err = f.Close(); err != nil {
 		return err
 	}
 	return c.LoadRules()

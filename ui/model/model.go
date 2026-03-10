@@ -24,6 +24,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/gorilla/websocket"
 	"github.com/muesli/termenv"
+	"github.com/rs/zerolog/log"
 )
 
 type Model struct {
@@ -444,7 +445,9 @@ func (m *Model) FindResultAtY(contentY int) int {
 func (m *Model) PostHistoryCmd(u string) tea.Cmd {
 	q, title := m.TextInput.Value(), m.GetSelectedTitle()
 	return func() tea.Msg {
-		m.Client.PostHistory(q, u, title)
+		if err := m.Client.PostHistory(q, u, title); err != nil {
+			log.Warn().Err(err).Msg("failed to post history")
+		}
 		return nil
 	}
 }
@@ -494,14 +497,18 @@ func (m *Model) DeleteAliasCmd(alias string) tea.Cmd {
 
 func (m *Model) DeleteURLCmd(u string) tea.Cmd {
 	return func() tea.Msg {
-		m.Client.DeleteDocument(u)
+		if err := m.Client.DeleteDocument(u); err != nil {
+			log.Warn().Err(err).Msg("failed to delete document")
+		}
 		return nil
 	}
 }
 
 func (m *Model) DeleteHistoryEntryCmd(query, url string) tea.Cmd {
 	return func() tea.Msg {
-		m.Client.DeleteHistoryEntry(query, url)
+		if err := m.Client.DeleteHistoryEntry(query, url); err != nil {
+			log.Warn().Err(err).Msg("failed to delete history entry")
+		}
 		items, _ := m.Client.FetchHistory()
 		return HistoryFetchedMsg{Items: items}
 	}

@@ -14,6 +14,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog/log"
 )
 
 func ListenToWebSocket(wsChan chan tea.Msg, wsDone chan struct{}) tea.Cmd {
@@ -31,12 +32,23 @@ func ConnectWebSocket(wsURL, origin string, wsChan chan tea.Msg, wsDone chan str
 	return func() tea.Msg {
 		header := http.Header{}
 		header.Set("Origin", origin)
-		conn, _, err := websocket.DefaultDialer.Dial(wsURL, header)
+		conn, resp, err := websocket.DefaultDialer.Dial(wsURL, header)
+		if resp != nil && resp.Body != nil {
+			defer func() {
+				if cerr := resp.Body.Close(); cerr != nil {
+					log.Warn().Err(cerr).Msg("failed to close websocket response body")
+				}
+			}()
+		}
 		if err != nil {
 			return model.WsDisconnectedMsg{Err: err}
 		}
 		go func() {
-			defer conn.Close()
+			defer func() {
+				if cerr := conn.Close(); cerr != nil {
+					log.Warn().Err(cerr).Msg("failed to close websocket connection")
+				}
+			}()
 			for {
 				select {
 				case <-wsDone:
@@ -79,7 +91,9 @@ func Search(conn *websocket.Conn, wsMu *sync.Mutex, wsReady bool, q model.Search
 			return nil
 		}
 		wsMu.Lock()
-		conn.WriteMessage(websocket.TextMessage, b)
+		if err := conn.WriteMessage(websocket.TextMessage, b); err != nil {
+			log.Warn().Err(err).Msg("failed to write websocket message")
+		}
 		wsMu.Unlock()
 		return nil
 	}
