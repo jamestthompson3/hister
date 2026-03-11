@@ -64,7 +64,8 @@ type Server struct {
 }
 
 type Indexer struct {
-	DetectLanguages bool `yaml:"detect_languages" mapstructure:"detect_languages"`
+	DetectLanguages bool     `yaml:"detect_languages" mapstructure:"detect_languages"`
+	Directories     []string `yaml:"directories" mapstructure:"directories"`
 }
 
 type Hotkeys struct {

@@ -72,6 +72,9 @@ var listenCmd = &cobra.Command{
 		if cfg.App.AccessToken != "" && strings.HasPrefix(cfg.BaseURL(""), "http://") {
 			log.Warn().Msg("Using authentication token without https. Token is sent plain-text in network requests.")
 		}
+		if len(cfg.Indexer.Directories) > 0 {
+			go indexer.WatchDirectories(cfg.Indexer.Directories, 30*time.Second)
+		}
 		server.Listen(cfg)
 	},
 }
