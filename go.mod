@@ -12,7 +12,6 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/mattn/go-runewidth v0.0.21
 	github.com/mattn/go-sqlite3 v1.14.34
-	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/muesli/termenv v0.16.0
 	github.com/pemistahl/lingua-go v1.4.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -31,7 +30,6 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
 	github.com/blevesearch/bleve_index_api v1.2.11 // indirect
 	github.com/blevesearch/geo v0.2.4 // indirect
@@ -64,7 +62,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gorilla/css v1.0.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
