@@ -45,6 +45,9 @@
     Keyboard,
     HelpCircle,
     X,
+    ChevronDown,
+    Calendar,
+    Filter,
   } from 'lucide-svelte';
   import type { HistoryItem } from '$lib/types';
 
@@ -698,13 +701,92 @@
     {/if}
 
     <ScrollArea class="min-h-0 flex-1">
-      <div class="w-full space-y-3 overflow-x-hidden px-3 py-2 md:px-12">
+      <div class="w-full max-w-[70em] space-y-3 overflow-x-hidden px-3 py-2 md:px-12">
         {#if hasResults}
           <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="font-outfit text-hister-indigo text-sm font-bold md:text-base">
               {lastResults?.total || totalResults} results{query ? ` for "${query}"` : ''}
             </span>
             <div class="flex items-center gap-2">
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger>
+                  {#snippet child({ props })}
+                  <Button
+                    {...props}
+                    variant="ghost"
+                    size="sm"
+                    class="font-inter text-text-brand-muted hover:text-hister-indigo gap-1 text-xs"
+                  >
+                    <Filter class="size-3" />
+                    Search Actions
+                    <ChevronDown class="size-3" />
+                  </Button>
+                  {/snippet}
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content
+                  class="border-brutal-border bg-card-surface w-80 rounded-none border-[3px] p-3 shadow-[4px_4px_0_var(--brutal-shadow)]"
+                >
+                  <div class="space-y-3">
+                    <div class="space-y-2">
+                      <p class="font-inter text-text-brand-muted flex items-center gap-1.5 text-xs font-semibold">
+                        <Calendar class="size-3" />
+                        Date Filter
+                      </p>
+                      <div class="flex flex-col gap-2">
+                        <label class="font-inter text-text-brand-secondary flex items-center gap-1.5 text-xs">
+                          From:
+                          <Input
+                            type="date"
+                            bind:value={dateFrom}
+                            class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 flex-1 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
+                          />
+                        </label>
+                        <label class="font-inter text-text-brand-secondary flex items-center gap-1.5 text-xs">
+                          To:
+                          <Input
+                            type="date"
+                            bind:value={dateTo}
+                            class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 flex-1 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <Separator class="bg-border-brand-muted" />
+                    <div class="space-y-2">
+                      <p class="font-inter text-text-brand-muted flex items-center gap-1.5 text-xs font-semibold">
+                        <Download class="size-3" />
+                        Export Results
+                      </p>
+                      <div class="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="border-hister-indigo text-hister-indigo hover:bg-hister-indigo/10 h-7 border-[2px] text-xs"
+                          onclick={() => exportJSON(lastResults!)}
+                        >
+                          JSON
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="border-hister-indigo text-hister-indigo hover:bg-hister-indigo/10 h-7 border-[2px] text-xs"
+                          onclick={() => exportCSV(lastResults!, query)}
+                        >
+                          CSV
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="border-hister-indigo text-hister-indigo hover:bg-hister-indigo/10 h-7 border-[2px] text-xs"
+                          onclick={() => exportRSS(lastResults!, query)}
+                        >
+                          RSS
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
               <Button
                 variant="ghost"
                 size="sm"
@@ -734,33 +816,12 @@
             </p>
           {/if}
 
-          <div
-            class="font-inter text-text-brand-secondary flex flex-wrap items-center gap-2 text-sm md:gap-3"
-          >
-            <label class="flex items-center gap-1.5">
-              From:
-              <Input
-                type="date"
-                bind:value={dateFrom}
-                class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
-              />
-            </label>
-            <label class="flex items-center gap-1.5">
-              To:
-              <Input
-                type="date"
-                bind:value={dateTo}
-                class="border-border-brand-muted bg-card-surface text-text-brand font-fira focus-visible:border-hister-indigo h-7 border-[2px] px-2 text-xs shadow-none focus-visible:ring-0"
-              />
-            </label>
-          </div>
-
           {#if lastResults?.history?.length}
             {#each lastResults.history as r, i}
               {@const favSrc = getFaviconSrc(r.favicon, r.url)}
               <article
                 data-result
-                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150"
+                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150 scroll-my-[6em]"
                 style={i === highlightIdx
                   ? 'background: linear-gradient(90deg, transparent, rgba(90, 138, 138, 0.12), transparent); border-left: 3px solid var(--hister-teal); padding-left: 0.75rem;'
                   : ''}
@@ -847,7 +908,7 @@
                       onclick={() => updatePriorityResult(r.url, r.title || '*title*', true)}
                     >
                       <PinOff class="size-3.5" />
-                      Remove priority
+                      Unpin
                     </Button>
                     {#if actionsMessage}
                       <p
@@ -871,7 +932,7 @@
               {@const favSrc = getFaviconSrc(r.favicon, r.url)}
               <article
                 data-result
-                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150"
+                class="flex w-full gap-3 overflow-hidden py-3.5 transition-all duration-150 scroll-my-[6em]"
                 style={idx === highlightIdx
                   ? `background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--${color}) 12%, transparent), transparent); border-left: 3px solid var(--${color}); padding-left: 0.75rem;`
                   : ''}
@@ -921,7 +982,7 @@
                     >
                     {#if r.added}
                       <span
-                        class="font-inter text-text-brand-muted text-xs md:text-sm"
+                        class="font-inter text-text-brand-muted whitespace-nowrap text-xs md:text-sm"
                         title={formatTimestamp(r.added)}>· {formatRelativeTime(r.added)}</span
                       >
                     {/if}
@@ -964,7 +1025,7 @@
                     <div class="flex items-center gap-2">
                       <Input
                         bind:value={actionsQuery}
-                        placeholder="Query for priority..."
+                        placeholder="Query string where this result should appear pinned..."
                         class="font-inter border-border-brand-muted focus-visible:border-hister-indigo h-7 flex-1 border-[2px] text-sm shadow-none focus-visible:ring-0"
                       />
                       <Button
@@ -984,7 +1045,7 @@
                       onclick={() => deleteResult(r.url)}
                     >
                       <Trash2 class="size-3.5" />
-                      Delete
+                      Delete result
                     </Button>
                     {#if actionsMessage}
                       <p
@@ -1000,30 +1061,6 @@
               {/if}
             {/each}
           {/if}
-
-          <Separator class="bg-border-brand-muted" />
-          <nav class="font-inter text-text-brand-muted flex items-center gap-4 text-xs">
-            <Download class="size-3.5" />
-            <span>Export:</span>
-            <Button
-              variant="link"
-              size="sm"
-              class="text-hister-indigo h-auto p-0 text-xs"
-              onclick={() => exportJSON(lastResults!)}>JSON</Button
-            >
-            <Button
-              variant="link"
-              size="sm"
-              class="text-hister-indigo h-auto p-0 text-xs"
-              onclick={() => exportCSV(lastResults!, query)}>CSV</Button
-            >
-            <Button
-              variant="link"
-              size="sm"
-              class="text-hister-indigo h-auto p-0 text-xs"
-              onclick={() => exportRSS(lastResults!, query)}>RSS</Button
-            >
-          </nav>
         {:else if query && lastResults}
           <section class="pmd:px-12 y-12 text-center">
             <p class="font-inter text-text-brand-secondary mb-4">
