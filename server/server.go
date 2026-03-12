@@ -336,7 +336,7 @@ func serveIndex(c *webContext) {
 	}
 	c.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	c.Response.Header().Set("Content-Security-Policy", fmt.Sprintf("script-src 'strict-dynamic' 'nonce-%s'", c.nonce))
-	if _, err := c.Response.Write(bytes.ReplaceAll(content, []byte("<script>"), []byte(fmt.Sprintf(`<script nonce="%s">`, c.nonce)))); err != nil {
+	if _, err := c.Response.Write(bytes.ReplaceAll(content, []byte("<script>"), fmt.Appendf(nil, `<script nonce="%s">`, c.nonce))); err != nil {
 		log.Warn().Err(err).Msg("failed to write index response")
 	}
 }

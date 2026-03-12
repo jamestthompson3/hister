@@ -283,10 +283,7 @@ func renderOverlayBox(content string, borderColor lipgloss.Color, maxWidth int) 
 	handleW := len([]rune(handle))
 	barW := maxW
 	leftHandleW := (barW - handleW) / 2
-	rightHandleW := barW - handleW - leftHandleW - closeBtnW
-	if rightHandleW < 0 {
-		rightHandleW = 0
-	}
+	rightHandleW := max(barW-handleW-leftHandleW-closeBtnW, 0)
 	topBar := bc.Render("╭"+strings.Repeat("─", leftHandleW)+handle+strings.Repeat("─", rightHandleW)) + closeBtn + bc.Render("╮")
 	bottomBar := bc.Render("╰" + strings.Repeat("─", maxW) + "╯")
 
@@ -336,7 +333,7 @@ func renderOverlay(bg, fg string, bgW, bgH, offX, offY int) string {
 	availW := bgW - startX
 
 	var sb strings.Builder
-	for i := 0; i < bgH; i++ {
+	for i := range bgH {
 		if i > 0 {
 			sb.WriteByte('\n')
 		}
