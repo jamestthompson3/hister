@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"maps"
 	"net"
 	"net/netip"
 	"net/url"
@@ -150,9 +151,7 @@ var DefaultTUIConfig = TUI{
 
 func copyMap(m map[string]string) map[string]string {
 	cp := make(map[string]string, len(m))
-	for k, v := range m {
-		cp[k] = v
-	}
+	maps.Copy(cp, m)
 	return cp
 }
 
