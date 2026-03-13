@@ -108,6 +108,7 @@ func WatchDirectories(ctx context.Context, dirs []config.Directory, callback fun
 		})
 	}
 
+outerLoop:
 	for {
 		select {
 		case <-ctx.Done():
@@ -116,38 +117,43 @@ func WatchDirectories(ctx context.Context, dirs []config.Directory, callback fun
 			if !ok {
 				return nil
 			}
-			if event.Has(fsnotify.Write) {
-				if dir := findMatchingDir(dirs, event.Name); dir != nil {
-					if MatchesFilters(filepath.Base(event.Name), dir.Filetypes, dir.Patterns, dir.Excludes) {
-						name := event.Name
-						mu.Lock()
-						if t, ok := debounced[name]; ok {
-							t.Reset(debounceTime)
-						} else {
-							debounced[name] = time.AfterFunc(debounceTime, func() {
-								mu.Lock()
-								delete(debounced, name)
-								mu.Unlock()
-								callback(name)
-							})
-						}
-						mu.Unlock()
-					}
+			switch {
+			case event.Has(fsnotify.Write):
+				dir := findMatchingDir(dirs, event.Name)
+				if dir == nil || !MatchesFilters(filepath.Base(event.Name), dir.Filetypes, dir.Patterns, dir.Excludes) {
+					continue outerLoop
 				}
-			}
-			if event.Has(fsnotify.Create) {
+				name := event.Name
+				mu.Lock()
+				if t, ok := debounced[name]; ok {
+					t.Reset(debounceTime)
+				} else {
+					debounced[name] = time.AfterFunc(debounceTime, func() {
+						mu.Lock()
+						delete(debounced, name)
+						mu.Unlock()
+						callback(name)
+					})
+				}
+				mu.Unlock()
+			case event.Has(fsnotify.Create):
 				st, err := os.Stat(event.Name)
-				if err == nil {
-					if st.IsDir() && !slices.Contains(watcher.WatchList(), event.Name) {
+				if err != nil {
+					continue outerLoop
+				}
+				if st.IsDir() {
+					if !slices.Contains(watcher.WatchList(), event.Name) {
 						if err := watcher.Add(event.Name); err != nil {
 							log.Warn().Err(err).Str("path", event.Name).Msg("Failed to watch new directory")
 						}
-					} else if dir := findMatchingDir(dirs, event.Name); dir != nil {
-						if MatchesFilters(filepath.Base(event.Name), dir.Filetypes, dir.Patterns, dir.Excludes) {
-							callback(event.Name)
-						}
 					}
+					continue outerLoop
 				}
+				dir := findMatchingDir(dirs, event.Name)
+				if dir == nil || !MatchesFilters(filepath.Base(event.Name), dir.Filetypes, dir.Patterns, dir.Excludes) {
+					continue outerLoop
+				}
+				callback(event.Name)
 			}
 		case err, ok := <-watcher.Errors:
 			if !ok {
