@@ -22,7 +22,7 @@ export const docsStructure: DocsCategory[] = [
   },
   {
     name: 'Advanced Server Setup',
-    slugs: ['server-setup', 'docker', 'service-management'],
+    slugs: ['server-setup', 'docker'],
     color: 'coral',
   },
 ];
