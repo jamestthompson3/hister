@@ -1,11 +1,13 @@
 package indexer
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"unicode/utf8"
 
 	"github.com/asciimoo/hister/config"
@@ -14,7 +16,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var maxFileSize int64 = 1024 * 1024 // 1MB default
+var (
+	ErrEmptyFile    = errors.New("empty file")
+	ErrBinaryFile   = errors.New("binary file")
+	ErrFileTooLarge = errors.New("file too large")
+
+	maxFileSize atomic.Int64
+)
+
+func init() {
+	maxFileSize.Store(1024 * 1024) // 1MB default
+}
 
 func IndexAll(dirs []config.Directory) {
 	for _, dir := range dirs {
@@ -75,10 +87,10 @@ func IndexFile(path string) error {
 		return err
 	}
 	if info.Size() == 0 {
-		return fmt.Errorf("empty file")
+		return ErrEmptyFile
 	}
-	if info.Size() > maxFileSize {
-		return fmt.Errorf("file too large (%d bytes)", info.Size())
+	if info.Size() > maxFileSize.Load() {
+		return fmt.Errorf("%w: %d bytes", ErrFileTooLarge, info.Size())
 	}
 
 	absPath, err := filepath.Abs(path)
@@ -98,7 +110,7 @@ func IndexFile(path string) error {
 		return fmt.Errorf("cannot read file: %w", err)
 	}
 	if !utf8.Valid(content) {
-		return fmt.Errorf("binary file")
+		return ErrBinaryFile
 	}
 
 	doc := &Document{
