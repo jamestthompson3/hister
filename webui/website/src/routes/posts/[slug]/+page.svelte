@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.meta.title} | Hister - Web History on Steroids</title>
+  <title>{data.meta.title} | Hister</title>
   {#if data.meta.description}
     <meta name="description" content={data.meta.description as string} />
   {/if}

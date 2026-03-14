@@ -7,7 +7,7 @@
 </script>
 
 <svelte:head>
-  <title>Hister - Web History on Steroids</title>
+  <title>Hister - Your Own Search Engine</title>
 </svelte:head>
 
 <Hero />
