@@ -43,7 +43,7 @@
       <span class="font-space text-[22px] font-extrabold tracking-[2px] text-white uppercase"
         >Hister</span
       >
-      <span class="font-inter text-sm text-white/40">Your Own Web Search Engine</span>
+      <span class="font-inter text-sm text-white/40">Your Own Search Engine</span>
     </hgroup>
 
     <nav class="flex flex-wrap gap-16">

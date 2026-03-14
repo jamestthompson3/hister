@@ -19,21 +19,21 @@
   }
 </script>
 
-<header class="bg-brutal-bg border-brutal-border sticky top-0 z-50 w-full border-b-[3px]">
+<header class="bg-brutal-bg border-brutal-border w-full border-b-[3px]">
   <nav class="flex items-center justify-between px-6 py-4 md:px-12">
     <a
       href="/"
-      class="font-space text-[28px] font-extrabold tracking-[2px] text-[var(--text-primary)] no-underline"
+      class="font-space text-[28px] font-extrabold tracking-[2px] text-[var(--text-primary)] uppercase no-underline"
     >
-      HISTER
+      Hister
     </a>
 
-    <ul class="m-0 hidden list-none items-center gap-8 p-0 md:flex">
+    <ul class="m-0 hidden list-none items-center p-0 md:flex">
       {#each links as link}
         <li>
           <a
             href={link.href}
-            class="font-space text-[13px] font-semibold tracking-[1.5px] no-underline transition-colors {isActive(
+            class="font-space gap-4 px-8 py-8 font-semibold tracking-[1.5px] no-underline transition-colors hover:underline md:text-sm {isActive(
               link.href,
             )
               ? 'text-[var(--text-primary)]'
@@ -50,10 +50,10 @@
         href="https://github.com/asciimoo/hister"
         target="_blank"
         rel="noopener noreferrer"
-        class="bg-hister-indigo font-space border-brutal-border h-auto rounded-none border-[3px] px-5 py-2.5 text-[13px] font-semibold tracking-[1px] text-white no-underline shadow-[3px_3px_0_rgba(0,0,0,0.25)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_rgba(0,0,0,0.25)]"
+        class="bg-hister-indigo font-space border-brutal-border h-auto rounded-none border-[3px] px-5 py-2.5 text-[13px] font-semibold tracking-[1px] text-white uppercase no-underline shadow-[3px_3px_0_rgba(0,0,0,0.25)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0_rgba(0,0,0,0.25)]"
       >
         <Github size={18} />
-        GITHUB
+        GitHub
       </Button>
     </div>
 
@@ -68,13 +68,13 @@
 
   {#if menuOpen}
     <ul
-      class="border-brutal-border bg-brutal-bg m-0 flex list-none flex-col gap-4 border-t-[2px] px-6 py-4 md:hidden"
+      class="border-brutal-border bg-brutal-bg m-0 flex list-none flex-col gap-4 border-t-[2px] md:hidden"
     >
       {#each links as link}
         <li>
           <a
             href={link.href}
-            class="font-space text-[15px] font-semibold tracking-[1.5px] no-underline {isActive(
+            class="font-space px-6 py-4 text-[15px] font-semibold tracking-[1.5px] no-underline {isActive(
               link.href,
             )
               ? 'text-[var(--text-primary)]'
@@ -90,10 +90,10 @@
           href="https://github.com/asciimoo/hister"
           target="_blank"
           rel="noopener noreferrer"
-          class="bg-hister-indigo font-space border-brutal-border h-auto w-fit rounded-none border-[3px] px-5 py-2.5 text-[13px] font-semibold tracking-[1px] text-white no-underline shadow-[3px_3px_0_rgba(0,0,0,0.25)]"
+          class="bg-hister-indigo font-space border-brutal-border h-auto w-fit rounded-none border-[3px] px-5 py-2.5 text-[13px] font-semibold tracking-[1px] text-white uppercase no-underline shadow-[3px_3px_0_rgba(0,0,0,0.25)]"
         >
           <Github size={18} />
-          GITHUB
+          GitHub
         </Button>
       </li>
     </ul>
