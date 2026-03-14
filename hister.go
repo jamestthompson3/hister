@@ -979,9 +979,6 @@ func getDBPaths() []browserDB {
 		paths = []string{}
 	}
 
-	//TODO:
-	// - also check globs
-
 	return dbFiles
 
 }
