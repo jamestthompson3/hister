@@ -10,6 +10,7 @@ import (
 
 	"github.com/asciimoo/hister/config"
 	"github.com/asciimoo/hister/files"
+
 	"github.com/rs/zerolog/log"
 )
 

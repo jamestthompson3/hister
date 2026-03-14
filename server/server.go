@@ -540,9 +540,8 @@ func doSearch(query *indexer.Query, cfg *config.Config) (*indexer.Results, error
 	}
 	if len(cfg.Indexer.Directories) > 0 {
 		for _, doc := range res.Documents {
-			if strings.HasPrefix(doc.URL, "file://") {
-				filePath := strings.TrimPrefix(doc.URL, "file://")
-				doc.URL = cfg.BaseURL("/api/file?path=") + url.QueryEscape(filePath)
+			if cfp, cut := strings.CutPrefix(doc.URL, "file://"); cut {
+				doc.URL = cfg.BaseURL("/api/file?path=") + url.QueryEscape(cfp)
 			}
 		}
 	}

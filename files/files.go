@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/asciimoo/hister/config"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog/log"
 )
@@ -73,7 +74,12 @@ func WatchDirectories(dirs []config.Directory, callback func(string)) {
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to start file watcher")
 	}
-	defer watcher.Close()
+
+	defer func() {
+		if err := watcher.Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to stop file watcher")
+		}
+	}()
 
 	go func() {
 		log.Debug().Msg("Starting file watcher")
@@ -105,7 +111,9 @@ func WatchDirectories(dirs []config.Directory, callback func(string)) {
 					st, err := os.Stat(event.Name)
 					if err == nil {
 						if st.IsDir() && !slices.Contains(watcher.WatchList(), event.Name) {
-							watcher.Add(event.Name)
+							if err := watcher.Add(event.Name); err != nil {
+								log.Error().Err(err).Str("path", event.Name).Msg("Watcher failed to add path")
+							}
 						} else if dir := findMatchingDir(dirs, event.Name); dir != nil {
 							if MatchesFilters(filepath.Base(event.Name), dir.Filetypes, dir.Patterns, dir.Excludes) {
 								callback(event.Name)
@@ -129,10 +137,15 @@ func WatchDirectories(dirs []config.Directory, callback func(string)) {
 		}
 		err = filepath.WalkDir(expanded, func(path string, d fs.DirEntry, err error) error {
 			if d.IsDir() {
-				watcher.Add(path)
+				if err := watcher.Add(path); err != nil {
+					log.Error().Err(err).Str("path", path).Msg("Watcher failed to add path")
+				}
 			}
 			return nil
 		})
+		if err != nil {
+			log.Error().Err(err).Str("path", expanded).Msg("Failed to list directory")
+		}
 	}
 	<-make(chan struct{})
 }
