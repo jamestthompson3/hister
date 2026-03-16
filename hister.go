@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -139,6 +140,39 @@ var listURLsCmd = &cobra.Command{
 		indexer.Iterate(func(d *indexer.Document) {
 			fmt.Println(d.URL)
 		})
+	},
+}
+
+var listFilesCmd = &cobra.Command{
+	Use:   "list-files",
+	Short: "List all watched files for indexing",
+	Long:  `List all files that match the configured directory watch patterns`,
+	Run: func(_ *cobra.Command, _ []string) {
+		if len(cfg.Indexer.Directories) == 0 {
+			exit(1, "No directories configured for watching")
+		}
+		for _, dir := range cfg.Indexer.Directories {
+			expanded := files.ExpandHome(dir.Path)
+			err := filepath.WalkDir(expanded, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					log.Warn().Err(err).Str("path", path).Msg("Error accessing path")
+					return nil
+				}
+				if d.IsDir() {
+					if path != expanded && files.ShouldSkipDir(d.Name(), dir.Excludes, dir.IncludeHidden) {
+						return filepath.SkipDir
+					}
+					return nil
+				}
+				if dir.IsMatching(d.Name()) {
+					fmt.Println(path)
+				}
+				return nil
+			})
+			if err != nil {
+				log.Error().Err(err).Str("directory", expanded).Msg("Failed to walk directory")
+			}
+		}
 	},
 }
 
@@ -284,6 +318,7 @@ func init() {
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createConfigCmd)
 	rootCmd.AddCommand(listURLsCmd)
+	rootCmd.AddCommand(listFilesCmd)
 	rootCmd.AddCommand(indexCmd)
 	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(searchCmd)
