@@ -3,6 +3,16 @@ import { sendPageData, sendResult } from '../modules/network';
 const missingURLMsg = {
   error: 'Missing or invalid Hister server URL. Configure it in the addon popup.',
 };
+
+function setErrorBadge(tabId: number) {
+  chrome.action.setBadgeText({ text: '!', tabId });
+  chrome.action.setBadgeBackgroundColor({ color: '#ff4444', tabId });
+}
+
+function clearErrorBadge(tabId: number) {
+  chrome.action.setBadgeText({ text: '', tabId });
+}
+
 // TODO check source
 function cjsMsgHandler(request, sender, sendResponse) {
   chrome.storage.local
@@ -14,6 +24,7 @@ function cjsMsgHandler(request, sender, sendResponse) {
 
       if (!u) {
         chrome.tabs.sendMessage(sender.tab.id, missingURLMsg);
+        setErrorBadge(sender.tab.id);
         return;
       }
       if (!u.endsWith('/')) {
@@ -25,19 +36,40 @@ function cjsMsgHandler(request, sender, sendResponse) {
           return;
         }
         sendPageData(u + 'api/add', request.pageData, tok)
-          .then((r) => sendResponse({ status: 'ok', status_code: r.status }))
-          .catch((err) => sendResponse({ error: err.message }));
+          .then((r) => {
+            if (r.status === 201) {
+              clearErrorBadge(sender.tab.id);
+            } else {
+              setErrorBadge(sender.tab.id);
+            }
+            sendResponse({ status: 'ok', status_code: r.status });
+          })
+          .catch((err) => {
+            setErrorBadge(sender.tab.id);
+            sendResponse({ error: err.message });
+          });
         return true;
       }
       if (request.resultData) {
         sendResult(u + 'api/history', request.resultData, tok)
-          .then((r) => sendResponse({ status: 'ok', status_code: r.status }))
-          .catch((err) => sendResponse({ error: err.message }));
+          .then((r) => {
+            if (r.status === 201) {
+              clearErrorBadge(sender.tab.id);
+            } else {
+              setErrorBadge(sender.tab.id);
+            }
+            sendResponse({ status: 'ok', status_code: r.status });
+          })
+          .catch((err) => {
+            setErrorBadge(sender.tab.id);
+            sendResponse({ error: err.message });
+          });
         return true;
       }
     })
     .catch((error) => {
       chrome.tabs.sendMessage(sender.tab.id, missingURLMsg);
+      setErrorBadge(sender.tab.id);
     });
   return true;
 }
