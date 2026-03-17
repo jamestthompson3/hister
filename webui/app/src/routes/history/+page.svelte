@@ -9,12 +9,13 @@
   import { ScrollArea } from '@hister/components/ui/scroll-area';
   import { PageHeader } from '@hister/components';
   import { StatusMessage } from '$lib/components';
-  import { Search, Clock, Trash2 } from 'lucide-svelte';
+  import { Search, Clock, RotateCw, Trash2 } from 'lucide-svelte';
 
   let items: HistoryItem[] = $state([]);
   let loading = $state(true);
   let error = $state('');
   let filter = $state('');
+  let pageKey = $state('');
   let activeGroup = $state('');
   let filterByDate = $state('');
 
@@ -32,8 +33,11 @@
     return `var(--${color})`;
   }
 
-  function formatDateLabel(dateStr: string): string {
-    const date = new Date(dateStr);
+  function formatDateLabel(timestamp: int): string {
+    if (!timestamp) {
+      return 'Unknown';
+    }
+    const date = new Date(timestamp * 1000);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today);
@@ -50,8 +54,11 @@
     });
   }
 
-  function getDateKey(dateStr: string): string {
-    const date = new Date(dateStr);
+  function getDateKey(timestamp: int): string {
+    if (!timestamp) {
+      return 'unknown';
+    }
+    const date = new Date(timestamp * 1000);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
@@ -60,16 +67,11 @@
     if (filter) {
       const f = filter.toLowerCase();
       result = result.filter(
-        (item) =>
-          item.query.toLowerCase().includes(f) ||
-          item.title.toLowerCase().includes(f) ||
-          item.url.toLowerCase().includes(f),
+        (item) => item.title.toLowerCase().includes(f) || item.url.toLowerCase().includes(f),
       );
     }
     if (filterByDate) {
-      result = result.filter(
-        (item) => item.updated_at && getDateKey(item.updated_at) === filterByDate,
-      );
+      result = result.filter((item) => item.added && getDateKey(item.added) === filterByDate);
     }
     return result;
   });
@@ -81,15 +83,12 @@
     if (filter) {
       const f = filter.toLowerCase();
       baseItems = baseItems.filter(
-        (item) =>
-          item.query.toLowerCase().includes(f) ||
-          item.title.toLowerCase().includes(f) ||
-          item.url.toLowerCase().includes(f),
+        (item) => item.title.toLowerCase().includes(f) || item.url.toLowerCase().includes(f),
       );
     }
     for (const item of baseItems) {
-      const key = item.updated_at ? getDateKey(item.updated_at) : 'unknown';
-      const label = item.updated_at ? formatDateLabel(item.updated_at) : 'Unknown';
+      const key = getDateKey(item.added);
+      const label = formatDateLabel(item.added);
       if (seen.has(key)) {
         g[seen.get(key)!].items.push(item);
       } else {
@@ -104,8 +103,8 @@
     const g: { key: string; label: string; items: HistoryItem[] }[] = [];
     const seen = new Map<string, number>();
     for (const item of filteredItems) {
-      const key = item.updated_at ? getDateKey(item.updated_at) : 'unknown';
-      const label = item.updated_at ? formatDateLabel(item.updated_at) : 'Unknown';
+      const key = getDateKey(item.added);
+      const label = formatDateLabel(item.added);
       if (seen.has(key)) {
         g[seen.get(key)!].items.push(item);
       } else {
@@ -120,6 +119,17 @@
     return groupColors[idx % groupColors.length];
   }
 
+  function getGlobalGroupColor(key: string): string {
+    let idx = 0;
+    for (const i in allGroups) {
+      if (allGroups[i].key == key) {
+        idx = i;
+        break;
+      }
+    }
+    return groupColors[idx % groupColors.length];
+  }
+
   function scrollToGroup(key: string) {
     activeGroup = key;
     filterByDate = key;
@@ -130,53 +140,49 @@
     activeGroup = groups.length > 0 ? groups[0].key : '';
   }
 
-  async function deleteHistoryItem(item: HistoryItem) {
+  async function loadItems(latest: string) {
     try {
-      await apiFetch('/history', {
-        method: 'POST',
-        headers: { 'Content-type': 'application/json; charset=UTF-8' },
-        body: JSON.stringify({ url: item.url, title: item.title, query: item.query, delete: true }),
+      await fetchConfig();
+      let url = '/history';
+      if (latest) {
+        url += '?last=' + encodeURIComponent(latest);
+      }
+      const res = await apiFetch(url, {
+        headers: { Accept: 'application/json' },
       });
-      items = items.filter((i) => i.url !== item.url || i.query !== item.query);
+      if (!res.ok) throw new Error('Failed to load history');
+      const resJSON = await res.json();
+      if (resJSON && resJSON.documents) {
+        if (!latest) {
+          items = resJSON.documents;
+        } else {
+          items.push(...resJSON.documents);
+        }
+        pageKey = resJSON.page_key;
+      }
     } catch (e) {
       error = String(e);
+    } finally {
+      loading = false;
     }
   }
 
-  async function deleteAllHistory() {
-    if (!confirm('Delete all history? This cannot be undone.')) return;
+  async function loadMore() {
+    loadItems(pageKey);
+  }
+
+  async function deleteItem(item: HistoryItem) {
     try {
-      for (const item of items) {
-        await apiFetch('/history', {
-          method: 'POST',
-          headers: { 'Content-type': 'application/json; charset=UTF-8' },
-          body: JSON.stringify({
-            url: item.url,
-            title: item.title,
-            query: item.query,
-            delete: true,
-          }),
-        });
-      }
-      items = [];
+      const data = new URLSearchParams({ url: item.url });
+      await apiFetch('/delete', { method: 'POST', body: data });
+      items = items.filter((i) => i.url !== item.url);
     } catch (e) {
       error = String(e);
     }
   }
 
   onMount(async () => {
-    try {
-      await fetchConfig();
-      const res = await apiFetch('/history', {
-        headers: { Accept: 'application/json' },
-      });
-      if (!res.ok) throw new Error('Failed to load history');
-      items = await res.json();
-    } catch (e) {
-      error = String(e);
-    } finally {
-      loading = false;
-    }
+    loadItems();
   });
 </script>
 
@@ -187,9 +193,7 @@
 <header
   class="bg-card-surface border-brutal-border flex shrink-0 items-center justify-between gap-2 overflow-hidden border-b-[3px] px-3 py-3 md:px-6"
 >
-  <PageHeader color="hister-indigo" size="xs" class="min-w-0 shrink-0" truncate
-    >Search History</PageHeader
-  >
+  <PageHeader color="hister-indigo" size="xs" class="min-w-0 shrink-0" truncate>History</PageHeader>
   <nav class="flex min-w-0 shrink-0 items-center gap-2 md:gap-3">
     <div
       class="border-brutal-border bg-page-bg flex h-8 min-w-0 items-center gap-2 border-[3px] px-2 md:px-3"
@@ -205,11 +209,11 @@
       <Button
         variant="outline"
         size="sm"
-        class="border-hister-rose text-hister-rose hover:bg-hister-rose/10 font-inter brutal-press h-8 shrink-0 gap-1.5 border-[3px] text-xs font-semibold"
-        onclick={deleteAllHistory}
+        class="hover:bg-hister-cyan/30 font-inter brutal-press h-8 shrink-0 gap-1.5 border-[3px] text-xs font-semibold"
+        onclick={loadMore}
       >
-        <Trash2 class="size-3.5" />
-        <span class="hidden md:inline">Delete All</span>
+        <RotateCw class="size-3.5" />
+        <span class="hidden md:inline">Load more</span>
       </Button>
     {/if}
   </nav>
@@ -253,7 +257,7 @@
               ? 'bg-muted-surface text-text-brand-muted'
               : 'bg-white/20 text-white'}"
           >
-            {filteredItems.length}
+            {items.length}
           </Badge>
         </Button>
 
@@ -331,7 +335,7 @@
     <ScrollArea orientation="vertical" class="min-h-0 max-w-full min-w-0 flex-1 overflow-x-hidden">
       <div class="w-full space-y-4 overflow-hidden px-3 py-3 md:space-y-6 md:px-6 md:py-5">
         {#each groups as group, gi}
-          {@const color = getGroupColor(gi)}
+          {@const color = getGlobalGroupColor(group.key)}
           <div id="group-{encodeURIComponent(group.key)}" class="space-y-2">
             <span class="font-outfit text-sm font-bold" style="color: {getColorVar(color)};"
               >{group.label}</span
@@ -340,7 +344,7 @@
 
             <div class="space-y-0">
               {#each group.items as item, ii}
-                {@const itemColor = getGroupColor(gi + ii)}
+                {@const itemColor = color}
                 <article
                   class="bg-card-surface border-b-brutal-border flex items-start gap-2 overflow-hidden border-b-[3px] px-2.5 py-2 md:items-center md:gap-3 md:px-3.5 md:py-2.5"
                   style="border-left: 3px solid {getColorVar(itemColor)};"
@@ -348,8 +352,7 @@
                   <div class="w-0 min-w-0 flex-1 space-y-0.5">
                     <a
                       href={item.url}
-                      class="font-outfit block truncate text-sm font-bold no-underline hover:underline md:text-base"
-                      style="color: {getColorVar(itemColor)};"
+                      class="font-outfit text-hister-cyan block truncate font-bold no-underline hover:underline md:text-lg"
                       target="_blank"
                       rel="noopener"
                     >
@@ -363,18 +366,9 @@
                   <nav class="flex shrink-0 items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      class="font-inter text-text-brand-muted hover:text-hister-indigo h-7 shrink-0 gap-1 px-1.5 text-xs no-underline md:px-2"
-                      href="/?q={encodeURIComponent(item.query)}"
-                    >
-                      <Search class="size-3" />
-                      <span class="hidden md:inline">Search</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
                       size="icon-sm"
                       class="text-text-brand-muted hover:text-hister-rose size-7 shrink-0"
-                      onclick={() => deleteHistoryItem(item)}
+                      onclick={() => deleteItem(item)}
                     >
                       <Trash2 class="size-3.5" />
                     </Button>

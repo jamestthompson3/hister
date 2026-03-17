@@ -63,6 +63,7 @@ type Results struct {
 	History         []*model.URLCount `json:"history"`
 	SearchDuration  string            `json:"search_duration"`
 	QuerySuggestion string            `json:"query_suggestion"`
+	PageKey         string            `json:"page_key"`
 }
 
 type multiBatch struct {
@@ -297,6 +298,39 @@ func (i *indexer) AddDocument(d *Document) error {
 		}
 	}
 	return i.getOrCreate(d.Language).Index(d.URL, d)
+}
+
+func GetLatestDocuments(limit int, latest string) *Results {
+	q := query.NewMatchAllQuery()
+	req := bleve.NewSearchRequest(q)
+	req.Fields = []string{"url", "title", "added"}
+	req.Size = limit
+	req.SortByCustom(search.SortOrder{
+		&search.SortField{
+			Field: "added",
+			Desc:  true,
+		},
+	})
+	if latest != "" {
+		req.SetSearchAfter([]string{latest})
+	}
+	res, err := i.idx.Search(req)
+	if err != nil || len(res.Hits) < 1 {
+		return nil
+	}
+	docs := make([]*Document, len(res.Hits))
+	for i, h := range res.Hits {
+		d := &Document{
+			Title: h.Fields["title"].(string),
+			URL:   h.Fields["url"].(string),
+			Added: int64(h.Fields["added"].(float64)),
+		}
+		docs[i] = d
+	}
+	return &Results{
+		Documents: docs,
+		PageKey:   res.Hits[len(res.Hits)-1].Sort[0],
+	}
 }
 
 func (i *indexer) getOrCreate(lang string) bleve.Index {

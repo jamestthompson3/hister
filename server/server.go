@@ -600,12 +600,8 @@ func serveAdd(c *webContext) {
 }
 
 func serveHistory(c *webContext) {
-	hs, err := model.GetLatestHistoryItems(40)
-	if err != nil {
-		serve500(c)
-		return
-	}
-	c.JSON(hs)
+	ds := indexer.GetLatestDocuments(100, c.Request.URL.Query().Get("last"))
+	c.JSON(ds)
 }
 
 func serveSaveHistory(c *webContext) {
