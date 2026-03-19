@@ -885,10 +885,12 @@ func serveDeleteDocument(c *webContext) {
 }
 
 type batchOp struct {
-	Op    string `json:"op"`
-	URL   string `json:"url"`
-	Title string `json:"title"`
-	Text  string `json:"text"`
+	Op      string `json:"op"`
+	URL     string `json:"url"`
+	Title   string `json:"title"`
+	Text    string `json:"text"`
+	HTML    string `json:"html"`
+	Favicon string `json:"favicon"`
 }
 
 type batchOpResult struct {
@@ -939,7 +941,7 @@ func serveBatch(c *webContext) {
 				results[i] = batchOpResult{Status: http.StatusBadRequest, Error: "missing url"}
 				continue
 			}
-			d := &indexer.Document{URL: op.URL, Title: op.Title, Text: op.Text}
+			d := &indexer.Document{URL: op.URL, Title: op.Title, Text: op.Text, HTML: op.HTML, Favicon: op.Favicon}
 			if c.Config.Rules.IsSkip(d.URL) || strings.HasPrefix(d.URL, c.Config.BaseURL("/")) {
 				results[i] = batchOpResult{Status: http.StatusNotAcceptable, Error: "url skipped by rules"}
 				continue
