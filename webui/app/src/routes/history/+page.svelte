@@ -404,11 +404,14 @@
                     >
                       {(item.title || item.url).replace(/<[^>]*>/g, '')}
                     </a>
-                    <div class="items-left flex flex-col gap-0 md:flex-row md:items-center md:gap-2">
+                    <div
+                      class="items-left flex flex-col gap-0 md:flex-row md:items-center md:gap-2"
+                    >
                       {#if item.added}
                         <span
                           class="font-inter text-text-brand-muted text-xs whitespace-nowrap md:text-sm"
-                          title={formatTimestamp(item.added)}>{formatRelativeTime(item.added)} ·</span
+                          title={formatTimestamp(item.added)}
+                          >{formatRelativeTime(item.added)} ·</span
                         >
                       {/if}
                       <span
