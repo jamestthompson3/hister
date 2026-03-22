@@ -62,7 +62,7 @@ func getTokenQuery(t Token) (query.Query, bool) {
 		textq.SetBoost(weights["text"])
 		return bleve.NewDisjunctionQuery(titleq, textq), negated
 	case TokenWord:
-		if strings.HasPrefix(t.Value, "-") {
+		if strings.HasPrefix(t.Value, "-") && len(t.Value) > 1 {
 			negated = true
 			t.Value = t.Value[1:]
 		}
@@ -83,7 +83,7 @@ func getTokenQuery(t Token) (query.Query, bool) {
 		}
 		if field != "" {
 			v := t.Value[len(field)+1:]
-			if strings.HasPrefix(v, "-") {
+			if strings.HasPrefix(v, "-") && len(v) > 1 {
 				negated = true
 				v = v[1:]
 			}
