@@ -601,7 +601,7 @@ func importHistory(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		browser = ""
 	} else {
-		browser = args[0]
+		browser = strings.ToLower(args[0])
 	}
 
 	var foundDBs []browserDB
