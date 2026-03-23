@@ -44,7 +44,7 @@
       if (cookies) {
         headers['Cookie'] = cookies;
       }
-      return fetch(authURL + 'api/userinfo', { headers })
+      return fetch(authURL + 'api/profile', { headers })
         .then((r) => {
           isAuthenticated = r.status === 200;
           return isAuthenticated;

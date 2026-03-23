@@ -66,3 +66,11 @@ func GetUserByToken(token string) (*User, error) {
 	}
 	return &u, nil
 }
+
+func RegenerateToken(userID uint) (string, error) {
+	token := rand.Text()
+	if err := DB.Model(&User{}).Where("id = ?", userID).Update("token", token).Error; err != nil {
+		return "", err
+	}
+	return token, nil
+}

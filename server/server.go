@@ -510,7 +510,7 @@ func serveLogout(c *webContext) {
 	serve200(c)
 }
 
-func serveUserInfo(c *webContext) {
+func serveProfile(c *webContext) {
 	if c.Config.App.UserHandling {
 		c.JSON(map[string]any{
 			"user_id":  c.UserID,
@@ -519,6 +519,15 @@ func serveUserInfo(c *webContext) {
 		return
 	}
 	serve200(c)
+}
+
+func serveGenerateToken(c *webContext) {
+	token, err := model.RegenerateToken(c.UserID)
+	if err != nil {
+		serve500(c)
+		return
+	}
+	c.JSON(map[string]string{"token": token})
 }
 
 // serveConfig returns app configuration as JSON and refreshes CSRF token.

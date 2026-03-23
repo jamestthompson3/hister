@@ -245,12 +245,20 @@ func init() {
 			Description:  "Logout current user",
 		},
 		{
-			Name:         "Userinfo",
-			Path:         "/api/userinfo",
+			Name:         "Profile",
+			Path:         "/api/profile",
 			Method:       GET,
 			CSRFRequired: false,
-			Handler:      serveUserInfo,
-			Description:  "Get current user info",
+			Handler:      serveProfile,
+			Description:  "Get current user profile",
+		},
+		{
+			Name:         "GenerateToken",
+			Path:         "/api/profile/token",
+			Method:       POST,
+			CSRFRequired: true,
+			Handler:      serveGenerateToken,
+			Description:  "Generate a new access token for the current user",
 		},
 	}
 }

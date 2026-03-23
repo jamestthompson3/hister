@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { ModeWatcher, toggleMode, mode } from 'mode-watcher';
   import { Button } from '@hister/components/ui/button';
-  import { Sun, Moon, LogIn, LogOut } from 'lucide-svelte';
+  import { Sun, Moon, LogIn, LogOut, UserRound } from 'lucide-svelte';
   import '../style.css';
   import { fetchConfig, logout, resetConfig, type AppConfig } from '$lib/api';
 
@@ -27,8 +27,7 @@
     { label: 'History', href: 'history' },
     { label: 'Rules', href: 'rules' },
     { label: 'Add', href: 'add' },
-  ];
-</script>
+  ];</script>
 
 <ModeWatcher />
 
@@ -62,6 +61,15 @@
     <div class="flex items-center justify-self-end">
       {#if config?.authMode === 'user'}
         {#if config?.username}
+          <Button
+            variant="ghost"
+            size="icon"
+            class="text-text-brand-muted hover:text-hister-indigo size-8 shrink-0 transition-all hover:scale-110 md:size-10"
+            title="Profile"
+            onclick={() => (window.location.href = '/profile')}
+          >
+            <UserRound class="size-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
