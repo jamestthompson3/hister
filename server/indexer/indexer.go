@@ -34,7 +34,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var Version = 3
+var Version = 4
 
 type indexer struct {
 	idx               bleve.IndexAlias       // used only for Search()
