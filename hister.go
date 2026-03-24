@@ -341,6 +341,37 @@ var deleteUserCmd = &cobra.Command{
 	},
 }
 
+var showUserCmd = &cobra.Command{
+	Use:   "show-user USERNAME",
+	Short: "Show user information",
+	Long:  "Display information about a user account (requires user_handling to be enabled)",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		if !cfg.App.UserHandling {
+			exit(1, "user_handling is not enabled in configuration")
+		}
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		u, err := model.GetUser(args[0])
+		if err != nil {
+			exit(1, "Failed to get user: "+err.Error())
+		}
+		admin := "no"
+		if u.IsAdmin {
+			admin = "yes"
+		}
+		fmt.Println(cliInfoStyle.Render("Username:   ") + u.Username)
+		fmt.Println(cliInfoStyle.Render("ID:         ") + fmt.Sprintf("%d", u.ID))
+		fmt.Println(cliInfoStyle.Render("Admin:      ") + admin)
+		if showToken, _ := cmd.Flags().GetBool("token"); showToken {
+			fmt.Println(cliInfoStyle.Render("Token:      ") + u.Token)
+		}
+		fmt.Println(cliInfoStyle.Render("Created at: ") + u.CreatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Println(cliInfoStyle.Render("Updated at: ") + u.UpdatedAt.Format("2006-01-02 15:04:05"))
+	},
+}
+
 var updateUserCmd = &cobra.Command{
 	Use:   "update-user USERNAME",
 	Short: "Update a user",
@@ -437,6 +468,7 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(createUserCmd)
 	rootCmd.AddCommand(deleteUserCmd)
+	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(updateUserCmd)
 
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
@@ -448,6 +480,8 @@ func init() {
 	updateUserCmd.Flags().String("username", "", "new username")
 	updateUserCmd.Flags().Bool("regen-token", false, "regenerate access token")
 	updateUserCmd.Flags().Bool("toggle-admin", false, "toggle admin status")
+
+	showUserCmd.Flags().Bool("token", false, "display the user's access token")
 
 	reindexCmd.Flags().BoolP("exclude-sensitive", "x", false, "don't add documents that contain sensitive content matched by config.SensitiveContentPatterns")
 

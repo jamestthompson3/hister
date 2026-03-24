@@ -76,6 +76,14 @@ func RegenerateToken(userID uint) (string, error) {
 	return token, nil
 }
 
+func GetUser(username string) (*User, error) {
+	var u User
+	if err := DB.Where("username = ?", username).First(&u).Error; err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &u, nil
+}
+
 func RegenerateTokenByUsername(username string) (string, error) {
 	var u User
 	if err := DB.Where("username = ?", username).First(&u).Error; err != nil {
