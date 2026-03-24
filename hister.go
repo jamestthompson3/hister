@@ -303,8 +303,8 @@ var createUserCmd = &cobra.Command{
 		if err != nil {
 			exit(1, "Failed to read password: "+err.Error())
 		}
-		if password == "" {
-			exit(1, "password must not be empty")
+		if len(password) < 8 {
+			exit(1, "password must be at least 8 characters long")
 		}
 		confirm, err := promptPassword("Confirm password: ")
 		if err != nil {
