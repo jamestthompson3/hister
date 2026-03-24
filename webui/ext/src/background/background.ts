@@ -16,13 +16,18 @@ function clearErrorBadge(tabId: number) {
 // TODO check source
 function cjsMsgHandler(request, sender, sendResponse) {
   chrome.storage.local
-    .get(['histerURL', 'indexingEnabled', 'histerCustomHeaders'])
+    .get(['histerURL', 'histerToken', 'indexingEnabled', 'histerCustomHeaders'])
     .then((data) => {
       let u = data['histerURL'] || '';
       const indexingEnabled = data['indexingEnabled'] !== false;
       const customHeaders = Array.isArray(data['histerCustomHeaders'])
         ? data['histerCustomHeaders']
         : [];
+
+      // token is not required, this is just for backward compatibility
+      if (data['histerToken']) {
+        customHeaders.push({ name: 'X-Access-Token', value: data['histerToken'] });
+      }
 
       if (!u) {
         chrome.tabs.sendMessage(sender.tab.id, missingURLMsg);
