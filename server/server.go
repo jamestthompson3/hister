@@ -257,7 +257,7 @@ func createHandler(cfg *config.Config, h func(*webContext)) func(w http.Response
 func withTokenAuth(handler endpointHandler) endpointHandler {
 	return func(c *webContext) {
 		session, err := sessionStore.Get(c.Request, storeName)
-		if err != nil {
+		if err != nil && session == nil {
 			serve403(c)
 			return
 		}
@@ -281,7 +281,7 @@ func withTokenAuth(handler endpointHandler) endpointHandler {
 
 func populateUserContext(c *webContext) {
 	session, err := sessionStore.Get(c.Request, storeName)
-	if err != nil {
+	if err != nil && session == nil {
 		return
 	}
 	if uid, ok := session.Values["user_id"].(uint); ok && uid > 0 {
@@ -342,8 +342,11 @@ func withCSRF(handler endpointHandler) endpointHandler {
 			handler(c)
 			return
 		}
-		// Allow add requests from the addons
-		if c.Request.URL.Path == c.Config.BasePathPrefix()+"/add" || c.Request.URL.Path == c.Config.BasePathPrefix()+"/api/add" {
+		// Allow add, config requests from the addons
+		for _, p := range []string{"/add", "/api/add", "/api/config"} {
+			if c.Request.URL.Path != c.Config.BasePathPrefix()+p {
+				continue
+			}
 			if strings.HasPrefix(c.Request.Header.Get("Origin"), "moz-extension://") {
 				handler(c)
 				return
@@ -355,7 +358,7 @@ func withCSRF(handler endpointHandler) endpointHandler {
 		}
 
 		session, err := sessionStore.Get(c.Request, storeName)
-		if err != nil {
+		if err != nil && session == nil {
 			http.Error(c.Response, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -509,7 +512,7 @@ func serveLogin(c *webContext) {
 		return
 	}
 	session, err := sessionStore.Get(c.Request, storeName)
-	if err != nil {
+	if err != nil && session == nil {
 		serve500(c)
 		return
 	}
@@ -524,7 +527,7 @@ func serveLogin(c *webContext) {
 
 func serveLogout(c *webContext) {
 	session, err := sessionStore.Get(c.Request, storeName)
-	if err != nil {
+	if err != nil && session == nil {
 		serve500(c)
 		return
 	}
