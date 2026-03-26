@@ -27,6 +27,8 @@ import (
 	"github.com/asciimoo/hister/server/model"
 	"github.com/asciimoo/hister/ui"
 
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
@@ -284,6 +286,144 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
+var createUserCmd = &cobra.Command{
+	Use:   "create-user USERNAME",
+	Short: "Create a new user",
+	Long:  "Create a new user account (requires user_handling to be enabled)",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		if !cfg.App.UserHandling {
+			exit(1, "user_handling is not enabled in configuration")
+		}
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		username := args[0]
+		password, err := promptPassword("Password: ")
+		if err != nil {
+			exit(1, "Failed to read password: "+err.Error())
+		}
+		if len(password) < 8 {
+			exit(1, "password must be at least 8 characters long")
+		}
+		confirm, err := promptPassword("Confirm password: ")
+		if err != nil {
+			exit(1, "Failed to read password: "+err.Error())
+		}
+		if password != confirm {
+			exit(1, "passwords do not match")
+		}
+		isAdmin, _ := cmd.Flags().GetBool("admin")
+		if _, err := model.CreateUser(username, password, isAdmin); err != nil {
+			exit(1, "Failed to create user: "+err.Error())
+		}
+		fmt.Println(cliSuccessStyle.Render("✓") + " User created: " + cliInfoStyle.Render(username))
+	},
+}
+
+var deleteUserCmd = &cobra.Command{
+	Use:   "delete-user USERNAME",
+	Short: "Delete a user",
+	Long:  "Delete a user account (requires user_handling to be enabled)",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		if !cfg.App.UserHandling {
+			exit(1, "user_handling is not enabled in configuration")
+		}
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		username := args[0]
+		if err := model.DeleteUser(username); err != nil {
+			exit(1, "Failed to delete user: "+err.Error())
+		}
+		fmt.Println(cliSuccessStyle.Render("✓") + " User deleted: " + cliInfoStyle.Render(username))
+	},
+}
+
+var showUserCmd = &cobra.Command{
+	Use:   "show-user USERNAME",
+	Short: "Show user information",
+	Long:  "Display information about a user account (requires user_handling to be enabled)",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		if !cfg.App.UserHandling {
+			exit(1, "user_handling is not enabled in configuration")
+		}
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		u, err := model.GetUser(args[0])
+		if err != nil {
+			exit(1, "Failed to get user: "+err.Error())
+		}
+		admin := "no"
+		if u.IsAdmin {
+			admin = "yes"
+		}
+		fmt.Println(cliInfoStyle.Render("Username:   ") + u.Username)
+		fmt.Println(cliInfoStyle.Render("ID:         ") + fmt.Sprintf("%d", u.ID))
+		fmt.Println(cliInfoStyle.Render("Admin:      ") + admin)
+		if showToken, _ := cmd.Flags().GetBool("token"); showToken {
+			fmt.Println(cliInfoStyle.Render("Token:      ") + u.Token)
+		}
+		fmt.Println(cliInfoStyle.Render("Created at: ") + u.CreatedAt.Format("2006-01-02 15:04:05"))
+		fmt.Println(cliInfoStyle.Render("Updated at: ") + u.UpdatedAt.Format("2006-01-02 15:04:05"))
+	},
+}
+
+var updateUserCmd = &cobra.Command{
+	Use:   "update-user USERNAME",
+	Short: "Update a user",
+	Long:  "Update a user account (requires user_handling to be enabled). Use flags to change username, regenerate token, or toggle admin status.",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		if !cfg.App.UserHandling {
+			exit(1, "user_handling is not enabled in configuration")
+		}
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		username := args[0]
+		changed := false
+
+		if newUsername, _ := cmd.Flags().GetString("username"); newUsername != "" {
+			if err := model.UpdateUsername(username, newUsername); err != nil {
+				exit(1, "Failed to update username: "+err.Error())
+			}
+			fmt.Println(cliSuccessStyle.Render("✓") + " Username changed: " + cliInfoStyle.Render(username) + " → " + cliInfoStyle.Render(newUsername))
+			username = newUsername
+			changed = true
+		}
+
+		if regen, _ := cmd.Flags().GetBool("regen-token"); regen {
+			token, err := model.RegenerateTokenByUsername(username)
+			if err != nil {
+				exit(1, "Failed to regenerate token: "+err.Error())
+			}
+			fmt.Println(cliSuccessStyle.Render("✓") + " New token for " + cliInfoStyle.Render(username) + ": " + cliInfoStyle.Render(token))
+			changed = true
+		}
+
+		if toggle, _ := cmd.Flags().GetBool("toggle-admin"); toggle {
+			isAdmin, err := model.ToggleAdmin(username)
+			if err != nil {
+				exit(1, "Failed to toggle admin: "+err.Error())
+			}
+			status := "disabled"
+			if isAdmin {
+				status = "enabled"
+			}
+			fmt.Println(cliSuccessStyle.Render("✓") + " Admin " + status + " for " + cliInfoStyle.Render(username))
+			changed = true
+		}
+
+		if !changed {
+			exit(1, "no changes specified - use --username, --regen-token, or --toggle-admin")
+		}
+	},
+}
+
 var reindexCmd = &cobra.Command{
 	Use:   "reindex",
 	Short: "Reindex",
@@ -315,6 +455,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "set log level (possible options: error, warning, info, debug, trace)")
 	rootCmd.PersistentFlags().StringP("search-url", "s", dcfg.App.SearchURL, "set default search engine url")
 	rootCmd.PersistentFlags().StringP("server-url", "u", dcfg.Server.BaseURL, "hister server URL")
+	rootCmd.PersistentFlags().StringP("token", "t", "", "access token (overrides config access_token)")
 
 	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(createConfigCmd)
@@ -325,10 +466,22 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(reindexCmd)
 	rootCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(createUserCmd)
+	rootCmd.AddCommand(deleteUserCmd)
+	rootCmd.AddCommand(showUserCmd)
+	rootCmd.AddCommand(updateUserCmd)
 
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
 
 	importCmd.Flags().IntP("min-visit", "m", 1, "only import URLs that were opened at least 'min-visit' times")
+
+	createUserCmd.Flags().Bool("admin", false, "create user with admin privileges")
+
+	updateUserCmd.Flags().String("username", "", "new username")
+	updateUserCmd.Flags().Bool("regen-token", false, "regenerate access token")
+	updateUserCmd.Flags().Bool("toggle-admin", false, "toggle admin status")
+
+	showUserCmd.Flags().Bool("token", false, "display the user's access token")
 
 	reindexCmd.Flags().BoolP("exclude-sensitive", "x", false, "don't add documents that contain sensitive content matched by config.SensitiveContentPatterns")
 
@@ -407,6 +560,9 @@ func initConfig() {
 			exit(1, "Failed to initialize config: "+err.Error())
 		}
 	}
+	if v, _ := rootCmd.PersistentFlags().GetString("token"); rootCmd.PersistentFlags().Changed("token") {
+		cfg.App.AccessToken = v
+	}
 }
 
 func initLog() {
@@ -448,6 +604,61 @@ func initIndex() {
 		log.Warn().Msg(cliWarningStyle.Render("There is a new indexer version. Run `hister reindex` to update your index."))
 	}
 	log.Debug().Msg("Indexer initialization complete")
+}
+
+type passwordModel struct {
+	input textinput.Model
+	done  bool
+	err   error
+}
+
+func (m passwordModel) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m passwordModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyEnter:
+			m.done = true
+			return m, tea.Quit
+		case tea.KeyCtrlC, tea.KeyEsc:
+			m.err = errors.New("cancelled")
+			return m, tea.Quit
+		}
+	}
+	var cmd tea.Cmd
+	m.input, cmd = m.input.Update(msg)
+	return m, cmd
+}
+
+func (m passwordModel) View() string {
+	if m.done || m.err != nil {
+		return ""
+	}
+	return m.input.View() + "\n"
+}
+
+func promptPassword(prompt string) (string, error) {
+	ti := textinput.New()
+	ti.Placeholder = ""
+	ti.EchoMode = textinput.EchoPassword
+	ti.EchoCharacter = '*'
+	ti.Prompt = prompt
+	ti.Focus()
+
+	m := passwordModel{input: ti}
+	p := tea.NewProgram(m)
+	result, err := p.Run()
+	if err != nil {
+		return "", err
+	}
+	final := result.(passwordModel)
+	if final.err != nil {
+		return "", final.err
+	}
+	return final.input.Value(), nil
 }
 
 func yesNoPrompt(label string, def bool) bool {

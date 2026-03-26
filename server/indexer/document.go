@@ -29,6 +29,7 @@ type Document struct {
 	Added              int64         `json:"added"`
 	Type               types.DocType `json:"type"`
 	Language           string        `json:"language"`
+	UserID             uint          `json:"user_id"`
 	faviconURL         string
 	processed          bool
 	skipSensitiveCheck bool
@@ -164,4 +165,15 @@ func (d *Document) processFile(ld LanguageDetector, pu *url.URL) error {
 	d.Language = ld.DetectLanguage(d.Text)
 	d.processed = true
 	return nil
+}
+
+func (d *Document) ID() string {
+	return GetDocID(d.UserID, d.URL)
+}
+
+func GetDocID(uid uint, url string) string {
+	if uid != 0 {
+		return fmt.Sprintf("%d:%s", uid, url)
+	}
+	return url
 }

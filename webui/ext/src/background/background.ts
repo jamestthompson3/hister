@@ -19,11 +19,15 @@ function cjsMsgHandler(request, sender, sendResponse) {
     .get(['histerURL', 'histerToken', 'indexingEnabled', 'histerCustomHeaders'])
     .then((data) => {
       let u = data['histerURL'] || '';
-      const tok = data['histerToken'] || '';
       const indexingEnabled = data['indexingEnabled'] !== false;
       const customHeaders = Array.isArray(data['histerCustomHeaders'])
         ? data['histerCustomHeaders']
         : [];
+
+      // token is not required, this is just for backward compatibility
+      if (data['histerToken']) {
+        customHeaders.push({ name: 'X-Access-Token', value: data['histerToken'] });
+      }
 
       if (!u) {
         chrome.tabs.sendMessage(sender.tab.id, missingURLMsg);
@@ -38,7 +42,7 @@ function cjsMsgHandler(request, sender, sendResponse) {
           sendResponse({ status: 'disabled' });
           return;
         }
-        sendPageData(u + 'api/add', request.pageData, tok, customHeaders)
+        sendPageData(u + 'api/add', request.pageData, customHeaders)
           .then((r) => {
             if (r.status === 201) {
               clearErrorBadge(sender.tab.id);
@@ -54,7 +58,7 @@ function cjsMsgHandler(request, sender, sendResponse) {
         return true;
       }
       if (request.resultData) {
-        sendResult(u + 'api/history', request.resultData, tok, customHeaders)
+        sendResult(u + 'api/history', request.resultData, customHeaders)
           .then((r) => {
             if (r.status === 201) {
               clearErrorBadge(sender.tab.id);

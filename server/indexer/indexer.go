@@ -34,7 +34,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var Version = 3
+var Version = 4
 
 type indexer struct {
 	idx               bleve.IndexAlias       // used only for Search()
@@ -56,6 +56,7 @@ type Query struct {
 	Sort      string `json:"sort"`
 	DateFrom  int64  `json:"date_from"`
 	DateTo    int64  `json:"date_to"`
+	UserID    uint   `json:"user_id"`
 	cfg       *config.Config
 }
 
@@ -76,7 +77,7 @@ type MultiBatch struct {
 
 var (
 	i                   *indexer
-	allFields           []string = []string{"url", "title", "text", "favicon", "html", "domain", "added", "type"}
+	allFields           []string = []string{"url", "title", "text", "favicon", "html", "domain", "added", "type", "user_id"}
 	ErrSensitiveContent          = errors.New("document contains sensitive data")
 	sensitiveContentRe  *regexp.Regexp
 	bleveConfig         map[string]any = map[string]any{
@@ -302,6 +303,10 @@ func DocumentCount() uint64 {
 	return i.Total()
 }
 
+func DocumentCountByUser(userID uint) uint64 {
+	return i.TotalByUser(userID)
+}
+
 func Add(d *Document) error {
 	return i.AddDocument(d)
 }
@@ -317,13 +322,26 @@ func (i *indexer) Total() uint64 {
 	return res.Total
 }
 
+func (i *indexer) TotalByUser(userID uint) uint64 {
+	uid := float64(userID)
+	q := bleve.NewNumericRangeInclusiveQuery(&uid, &uid, boolPtr(true), boolPtr(true))
+	q.SetField("user_id")
+	req := bleve.NewSearchRequest(q)
+	req.Size = 1
+	res, err := i.idx.Search(req)
+	if err != nil {
+		return 0
+	}
+	return res.Total
+}
+
 func (i *indexer) AddDocument(d *Document) error {
 	if !d.processed {
 		if err := d.Process(i.langDetector); err != nil {
 			return err
 		}
 	}
-	return i.getOrCreate(d.Language).Index(d.URL, d)
+	return i.getOrCreate(d.Language).Index(d.ID(), d)
 }
 
 func GetLatestDocuments(limit int, latest string) *Results {
@@ -419,13 +437,13 @@ func (b *MultiBatch) Add(d *Document) error {
 	if _, ok := b.batches[d.Language]; !ok {
 		b.batches[d.Language] = idx.NewBatch()
 	}
-	return b.batches[d.Language].Index(d.URL, d)
+	return b.batches[d.Language].Index(d.ID(), d)
 }
 
-func (b *MultiBatch) Delete(u string) error {
+func (b *MultiBatch) Delete(id string) error {
 	// Delete from all language indices
 	for _, idx := range b.indexer.indexers {
-		if err := idx.Delete(u); err != nil {
+		if err := idx.Delete(id); err != nil {
 			return err
 		}
 	}
@@ -442,9 +460,9 @@ func (b *MultiBatch) Save() error {
 	return nil
 }
 
-func Delete(u string) error {
+func Delete(id string) error {
 	for _, idx := range i.indexers {
-		if err := idx.Delete(u); err != nil {
+		if err := idx.Delete(id); err != nil {
 			return err
 		}
 	}
@@ -481,28 +499,7 @@ func Search(cfg *config.Config, q *Query) (*Results, error) {
 	}
 	matches := make([]*Document, len(res.Hits))
 	for j, v := range res.Hits {
-		d := &Document{
-			URL: v.ID,
-		}
-
-		if t, ok := v.Fragments["text"]; ok {
-			d.Text = t[0]
-		}
-		if t, ok := v.Fragments["title"]; ok {
-			d.Title = t[0]
-		} else {
-			s, ok := v.Fields["title"].(string)
-			if ok {
-				d.Title = s
-			}
-		}
-		if i, ok := v.Fields["favicon"].(string); ok {
-			d.Favicon = i
-		}
-		if t, ok := v.Fields["added"].(float64); ok {
-			d.Added = int64(t)
-		}
-		matches[j] = d
+		matches[j] = docFromHit(v)
 	}
 	r := &Results{
 		Total:     res.Total,
@@ -549,6 +546,8 @@ func Iterate(fn func(*Document)) {
 	}
 }
 
+func boolPtr(b bool) *bool { return &b }
+
 func docFromHit(h *search.DocumentMatch) *Document {
 	d := &Document{}
 	if t, ok := h.Fragments["title"]; ok {
@@ -577,6 +576,9 @@ func docFromHit(h *search.DocumentMatch) *Document {
 	if t, ok := h.Fields["type"].(float64); ok {
 		d.Type = types.DocType(t)
 	}
+	if t, ok := h.Fields["user_id"].(float64); ok {
+		d.UserID = uint(t)
+	}
 	return d
 }
 
@@ -600,6 +602,18 @@ func (q *Query) create() query.Query {
 		dateQuery := bleve.NewNumericRangeQuery(min, max)
 		dateQuery.SetField("added")
 		sq = bleve.NewConjunctionQuery(sq, dateQuery)
+	}
+
+	if q.UserID > 0 {
+		uid := float64(q.UserID)
+		userQuery := bleve.NewNumericRangeInclusiveQuery(&uid, &uid, boolPtr(true), boolPtr(true))
+		userQuery.SetField("user_id")
+		// userid 0 is preserved for global results
+		zeroF := float64(0)
+		globalQuery := bleve.NewNumericRangeInclusiveQuery(&zeroF, &zeroF, boolPtr(true), boolPtr(true))
+		globalQuery.SetField("user_id")
+		userOrGlobal := bleve.NewDisjunctionQuery(userQuery, globalQuery)
+		sq = bleve.NewConjunctionQuery(sq, userOrGlobal)
 	}
 
 	return sq
@@ -662,6 +676,7 @@ func createMapping(lang string) mapping.IndexMapping {
 	docMapping.AddFieldMappingsAt("html", noIdxMap)
 	docMapping.AddFieldMappingsAt("added", bleve.NewNumericFieldMapping())
 	docMapping.AddFieldMappingsAt("type", bleve.NewNumericFieldMapping())
+	docMapping.AddFieldMappingsAt("user_id", bleve.NewNumericFieldMapping())
 
 	im.DefaultMapping = docMapping
 

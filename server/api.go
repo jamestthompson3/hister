@@ -33,6 +33,8 @@ type Endpoint struct {
 	Path         string
 	Method       string
 	CSRFRequired bool
+	NoAuth       bool
+	AdminOnly    bool
 	Handler      endpointHandler `json:"-"`
 	Description  string
 	Args         []*EndpointArg
@@ -53,6 +55,7 @@ func init() {
 			Path:         "/api/config",
 			Method:       GET,
 			CSRFRequired: true,
+			NoAuth:       true,
 			Handler:      serveConfig,
 			Description:  "Serve config",
 		},
@@ -210,6 +213,7 @@ func init() {
 			Path:         "/api/reindex",
 			Method:       POST,
 			CSRFRequired: true,
+			AdminOnly:    true,
 			Handler:      serveReindex,
 			Description:  "Reindex all documents",
 			Args: []*EndpointArg{
@@ -224,6 +228,39 @@ func init() {
 			CSRFRequired: false,
 			Handler:      serveAPI,
 			Description:  "API documentation",
+		},
+		{
+			Name:         "Login",
+			Path:         "/api/login",
+			Method:       POST,
+			CSRFRequired: true,
+			NoAuth:       true,
+			Handler:      serveLogin,
+			Description:  "Login with username and password",
+		},
+		{
+			Name:         "Logout",
+			Path:         "/api/logout",
+			Method:       POST,
+			CSRFRequired: true,
+			Handler:      serveLogout,
+			Description:  "Logout current user",
+		},
+		{
+			Name:         "Profile",
+			Path:         "/api/profile",
+			Method:       GET,
+			CSRFRequired: false,
+			Handler:      serveProfile,
+			Description:  "Get current user profile",
+		},
+		{
+			Name:         "GenerateToken",
+			Path:         "/api/profile/token",
+			Method:       POST,
+			CSRFRequired: true,
+			Handler:      serveGenerateToken,
+			Description:  "Generate a new access token for the current user",
 		},
 	}
 }
