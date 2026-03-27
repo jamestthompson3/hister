@@ -356,7 +356,7 @@ func withCSRF(handler endpointHandler) endpointHandler {
 			return
 		}
 		// Allow add, config requests from the addons
-		for _, p := range []string{"/add", "/api/add", "/api/config"} {
+		for _, p := range []string{"/add", "/api/add", "/api/config", "/api/rules"} {
 			if c.Request.URL.Path != c.Config.BasePathPrefix()+p {
 				continue
 			}

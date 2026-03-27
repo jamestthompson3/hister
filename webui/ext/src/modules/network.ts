@@ -27,6 +27,7 @@ async function fetchAPI(
   options: {
     method?: string;
     body?: unknown;
+    formData?: Record<string, string>;
     customHeaders?: { name: string; value: string }[];
   } = {},
 ): Promise<Response> {
@@ -35,6 +36,8 @@ async function fetchAPI(
 
   if (options.body !== undefined) {
     headers['Content-type'] = 'application/json; charset=UTF-8';
+  } else if (options.formData !== undefined) {
+    headers['Content-type'] = 'application/x-www-form-urlencoded';
   }
   if (cookieHeader) {
     headers['Cookie'] = cookieHeader;
@@ -43,15 +46,18 @@ async function fetchAPI(
     if (h.name) headers[h.name] = h.value || '';
   }
 
-  const fetchOptions: RequestInit = {
-    method: options.method ?? (options.body !== undefined ? 'POST' : 'GET'),
-    headers,
-  };
+  let fetchBody: BodyInit | undefined;
   if (options.body !== undefined) {
-    fetchOptions.body = JSON.stringify(options.body);
+    fetchBody = JSON.stringify(options.body);
+  } else if (options.formData !== undefined) {
+    fetchBody = new URLSearchParams(options.formData).toString();
   }
 
-  return fetch(url, fetchOptions);
+  return fetch(url, {
+    method: options.method ?? (fetchBody !== undefined ? 'POST' : 'GET'),
+    headers,
+    body: fetchBody,
+  });
 }
 
 async function sendPageData(url, doc, customHeaders = []) {

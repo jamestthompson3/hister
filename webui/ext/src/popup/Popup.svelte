@@ -17,6 +17,7 @@
   let messageType: 'success' | 'error' | 'info' = $state('success');
   let showSettings = $state(false);
   let isPageSkipped = $state(false);
+  let tabURL = $state('');
   let messageKey = $state(0); // to reappear message every time it is updated
 
   function setMessage(mType, msg) {
@@ -91,13 +92,31 @@
             setErrorMessage('Failed to send page data to server');
           }
         });
-        const tabURL = tabs[0].url;
-        if (tabURL) {
-          checkTabSkipRule(tabURL);
+        const currentTabURL = tabs[0].url;
+        if (currentTabURL) {
+          tabURL = currentTabURL;
+          checkTabSkipRule(currentTabURL);
         }
       });
     },
   );
+
+  function escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  async function addSkipRule(pattern: string) {
+    try {
+      const response = await chrome.runtime.sendMessage({ action: 'addSkipRule', pattern });
+      if (response?.ok) {
+        await checkTabSkipRule(tabURL);
+      } else {
+        setErrorMessage(response?.error ?? 'Failed to add skip rule');
+      }
+    } catch (e: any) {
+      setErrorMessage(e.message ?? 'Failed to add skip rule');
+    }
+  }
 
   async function checkTabSkipRule(tabURL: string) {
     try {
@@ -292,6 +311,31 @@
           Reindex Page
         </Button>
       </div>
+
+      <!-- Disable indexing section -->
+      {#if tabURL}
+        <div class="border-brutal-border border-b-[3px] px-5 py-4">
+          <p class="font-outfit text-text-brand mb-2 text-xs font-bold tracking-widest">
+            Disable indexing
+          </p>
+          <div class="flex gap-2">
+            <Button
+              variant="outline"
+              onclick={() => addSkipRule(escapeRegex(tabURL) + '$')}
+              class="border-brutal-border font-outfit hover:border-hister-rose h-9 flex-1 border-[3px] text-xs font-bold tracking-wide transition-all hover:shadow-[3px_3px_0_var(--brutal-shadow)]"
+            >
+              This Page
+            </Button>
+            <Button
+              variant="outline"
+              onclick={() => addSkipRule(escapeRegex(new URL(tabURL).origin))}
+              class="border-brutal-border font-outfit hover:border-hister-rose h-9 flex-1 border-[3px] text-xs font-bold tracking-wide transition-all hover:shadow-[3px_3px_0_var(--brutal-shadow)]"
+            >
+              This Domain
+            </Button>
+          </div>
+        </div>
+      {/if}
     {/if}
 
     <!-- Authenticate section -->

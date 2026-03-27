@@ -193,6 +193,46 @@ function cjsMsgHandler(request, sender, sendResponse) {
         customHeaders.push({ name: 'X-Access-Token', value: data['histerToken'] });
       }
 
+      if (request.action === 'addSkipRule') {
+        if (!u) {
+          sendResponse({ error: 'No server URL configured' });
+          return;
+        }
+        const baseURL = u.endsWith('/') ? u : u + '/';
+        (async () => {
+          try {
+            const rulesResp = await fetchAPI(baseURL + 'api/rules', { customHeaders });
+            if (!rulesResp.ok) {
+              sendResponse({ error: `Failed to fetch rules: ${rulesResp.status}` });
+              return;
+            }
+            const rulesData = await rulesResp.json();
+            const existingSkip: string[] = rulesData.skip ?? [];
+            const existingPriority: string[] = rulesData.priority ?? [];
+            const newSkip = [...existingSkip, request.pattern];
+            const saveResp = await fetchAPI(baseURL + 'api/rules', {
+              formData: {
+                skip: newSkip.join(' '),
+                priority: existingPriority.join(' '),
+              },
+              customHeaders,
+            });
+            if (!saveResp.ok) {
+              sendResponse({ error: `Failed to save rule: ${saveResp.status}` });
+              return;
+            }
+            skipRulesCache = null;
+            sendResponse({ ok: true });
+            // Grey out the icon on the active tab immediately
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.id && tab.url) await updateTabIcon(tab.id, tab.url);
+          } catch (e) {
+            sendResponse({ error: e.message });
+          }
+        })();
+        return;
+      }
+
       if (request.action === 'checkSkipRule') {
         if (!u) {
           sendResponse({ isSkipped: false });
