@@ -321,7 +321,7 @@ var createUserCmd = &cobra.Command{
 var deleteUserCmd = &cobra.Command{
 	Use:   "delete-user USERNAME",
 	Short: "Delete a user",
-	Long:  "Delete a user account (requires user_handling to be enabled)",
+	Long:  "Delete a user account (requires user_handling to be enabled). Use --purge to also remove all indexed documents belonging to the user.",
 	Args:  cobra.ExactArgs(1),
 	PreRun: func(_ *cobra.Command, _ []string) {
 		if !cfg.App.UserHandling {
@@ -331,6 +331,26 @@ var deleteUserCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		username := args[0]
+		u, err := model.GetUser(username)
+		if err != nil {
+			exit(1, "Failed to get user: "+err.Error())
+		}
+		c := newClient()
+		q := fmt.Sprintf("user_id:%d", u.ID)
+		res, err := c.Search(q)
+		if err != nil {
+			exit(1, "Failed to check user documents: "+err.Error())
+		}
+		if res.Total > 0 {
+			purge, _ := cmd.Flags().GetBool("purge")
+			if !purge {
+				exit(1, fmt.Sprintf("User %q has %d indexed document(s). Use --purge to delete them along with the user.", username, res.Total))
+			}
+			if err := c.DeleteDocuments(q); err != nil {
+				exit(1, "Failed to purge user documents: "+err.Error())
+			}
+			fmt.Printf("%s Purged %d document(s) for user %s\n", cliSuccessStyle.Render("✓"), res.Total, cliInfoStyle.Render(username))
+		}
 		if err := model.DeleteUser(username); err != nil {
 			exit(1, "Failed to delete user: "+err.Error())
 		}
@@ -477,6 +497,8 @@ func init() {
 	updateUserCmd.Flags().String("username", "", "new username")
 	updateUserCmd.Flags().Bool("regen-token", false, "regenerate access token")
 	updateUserCmd.Flags().Bool("toggle-admin", false, "toggle admin status")
+
+	deleteUserCmd.Flags().Bool("purge", false, "also delete all indexed documents belonging to the user")
 
 	showUserCmd.Flags().Bool("token", false, "display the user's access token")
 
