@@ -134,7 +134,7 @@ func initializeIndexer(basePath string, detectLanguages bool) (*indexer, error) 
 			return nil, errors.New("cannot open index: index is already opened - close other Hister instances and try again")
 		}
 		mapping := createMapping("default")
-		idx, err = bleve.NewUsing(idxPath, mapping, bleve.Config.DefaultIndexType, bleve.Config.DefaultKVStore, bleveRuntimeConfig())
+		idx, err = bleve.NewUsing(idxPath, mapping, bleve.Config.DefaultIndexType, bleve.Config.DefaultMemKVStore, bleveRuntimeConfig())
 		if err != nil {
 			return nil, err
 		}
@@ -402,7 +402,7 @@ func (i *indexer) getOrCreate(lang string) bleve.Index {
 
 func (i *indexer) addIndexer(name, lang string) error {
 	mapping := createMapping(lang)
-	idx, err := bleve.NewUsing(filepath.Join(i.dir, name), mapping, bleve.Config.DefaultIndexType, bleve.Config.DefaultKVStore, bleveRuntimeConfig())
+	idx, err := bleve.NewUsing(filepath.Join(i.dir, name), mapping, bleve.Config.DefaultIndexType, bleve.Config.DefaultMemKVStore, bleveRuntimeConfig())
 	if err != nil {
 		return err
 	}
