@@ -935,7 +935,7 @@
                       <a
                         data-result-link
                         href={r.url}
-                        class="font-outfit text-md text-hister-teal min-w-0 flex-1 overflow-hidden font-semibold text-ellipsis whitespace-nowrap hover:underline md:text-xl"
+                        class="font-outfit text-md text-hister-teal min-w-0 flex-1 font-semibold hover:underline md:overflow-hidden md:text-xl"
                         onclick={(e) => {
                           e.preventDefault();
                           openResult(r.url, r.title || '*title*', e.ctrlKey || e.metaKey);
