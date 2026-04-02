@@ -906,32 +906,32 @@
                     ? 'background: linear-gradient(90deg, transparent, rgba(90, 138, 138, 0.12), transparent); border-left: 3px solid var(--hister-teal); padding-left: 0.75rem;'
                     : ''}
                 >
-                  <div
-                    class="bg-hister-teal mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
-                  >
-                    {#if favSrc}
-                      <img
-                        src={favSrc}
-                        alt=""
-                        class="h-full w-full object-cover"
-                        onload={(e) => {
-                          (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
-                            'transparent';
-                        }}
-                        onerror={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
-                            'hidden',
-                          );
-                        }}
-                      />
-                      <Star class="hidden size-3 text-white" />
-                    {:else}
-                      <Star class="size-3 text-white" />
-                    {/if}
-                  </div>
                   <div class="w-0 min-w-0 flex-1 space-y-0.5">
-                    <div class="flex items-center gap-1">
+                    <div class="flex items-center gap-1.5">
+                      <div
+                        class="bg-hister-teal flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
+                      >
+                        {#if favSrc}
+                          <img
+                            src={favSrc}
+                            alt=""
+                            class="h-full w-full object-cover"
+                            onload={(e) => {
+                              (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
+                                'transparent';
+                            }}
+                            onerror={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
+                                'hidden',
+                              );
+                            }}
+                          />
+                          <Star class="hidden size-3 text-white" />
+                        {:else}
+                          <Star class="size-3 text-white" />
+                        {/if}
+                      </div>
                       <a
                         data-result-link
                         href={r.url}
@@ -1022,33 +1022,33 @@
                     ? `background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--${color}) 12%, transparent), transparent); border-left: 3px solid var(--${color}); padding-left: 0.75rem;`
                     : ''}
                 >
-                  <div
-                    class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
-                    style="background-color: var(--{color});"
-                  >
-                    {#if favSrc}
-                      <img
-                        src={favSrc}
-                        alt=""
-                        class="h-full w-full object-cover"
-                        onload={(e) => {
-                          (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
-                            'transparent';
-                        }}
-                        onerror={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
-                            'hidden',
-                          );
-                        }}
-                      />
-                      <Globe class="hidden size-3 text-white" />
-                    {:else}
-                      <Globe class="size-3 text-white" />
-                    {/if}
-                  </div>
                   <div class="w-0 min-w-0 flex-1 space-y-0.5">
-                    <div class="flex items-center gap-1">
+                    <div class="flex items-center gap-1.5">
+                      <div
+                        class="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden"
+                        style="background-color: var(--{color});"
+                      >
+                        {#if favSrc}
+                          <img
+                            src={favSrc}
+                            alt=""
+                            class="h-full w-full object-cover"
+                            onload={(e) => {
+                              (e.target as HTMLImageElement).parentElement!.style.backgroundColor =
+                                'transparent';
+                            }}
+                            onerror={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove(
+                                'hidden',
+                              );
+                            }}
+                          />
+                          <Globe class="hidden size-3 text-white" />
+                        {:else}
+                          <Globe class="size-3 text-white" />
+                        {/if}
+                      </div>
                       <a
                         data-result-link
                         href={r.url}
