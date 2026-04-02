@@ -64,7 +64,7 @@
     <Card.Header color="hister-indigo" class="justify-between gap-2 px-7 py-5">
       <Card.Title class="font-outfit text-[22px] font-black text-white">Add Entry</Card.Title>
       <Card.Description class="font-inter text-[13px] font-medium text-white/70"
-        >Manually index a page</Card.Description
+        >Manually add a document to the index</Card.Description
       >
     </Card.Header>
 
