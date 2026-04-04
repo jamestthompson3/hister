@@ -859,7 +859,7 @@ func yesNoPrompt(label string, def bool) bool {
 func indexURL(u string, clientOpts ...client.Option) error {
 	httpClient := &http.Client{
 		// Websites can be slow or unreachable, we don't want to wait too long for each of them, especially if we are indexing a lot of URLs during import.
-		Timeout: 5 * time.Second,
+		Timeout: time.Duration(cfg.Crawler.Timeout) * time.Second,
 	}
 	if u == "" {
 		log.Warn().Msg("URL must not be empty")
@@ -1072,7 +1072,7 @@ func importDB(dbFile string, table string, cmd *cobra.Command) {
 		}
 		fmt.Printf("[%d/%d] %s\n", i, count, u)
 		if err := indexURL(u); err != nil {
-			log.Warn().Err(err).Msg("Failed to index URL")
+			log.Warn().Err(err).Str("url", u).Msg("Failed to index URL")
 		}
 	}
 
