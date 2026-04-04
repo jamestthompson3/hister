@@ -22,7 +22,7 @@ Hister is a general purpose web search engine providing automatic full-text inde
 
 ## Development
 
-**Requirements**: Go 1.16 and NPM
+**Requirements**: latest Go and NPM
 
 - Clone the repository
 - Build with `./manage.sh build` (or `go generate ./...; go build`)
