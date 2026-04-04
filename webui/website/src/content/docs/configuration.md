@@ -343,7 +343,7 @@ crawler:
 
 ## `sensitive_content_patterns` Section
 
-A map of named regex patterns. Any indexed page containing a match will have that field redacted before storage. Useful for preventing accidental indexing of secrets, tokens, or credentials.
+A map of named [Go regular expression](https://pkg.go.dev/regexp/syntax) patterns. Any indexed page containing a match will have that field redacted before storage. Useful for preventing accidental indexing of secrets, tokens, or credentials.
 
 ```yaml
 sensitive_content_patterns:

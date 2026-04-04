@@ -323,7 +323,12 @@
               >INDEXING RULES</Card.Title
             >
             <Card.Description class="font-inter text-sm text-white/70"
-              >{ruleRows.length} rules configured</Card.Description
+              >{ruleRows.length} rules configured · patterns use
+              <a
+                href="https://pkg.go.dev/regexp/syntax"
+                target="_blank"
+                class="underline opacity-80 hover:opacity-100">Go regexp</a
+              > syntax</Card.Description
             >
           </div>
         </Card.Header>
@@ -429,7 +434,7 @@
                 type="text"
                 variant="brutal"
                 bind:value={newRulePattern}
-                placeholder="Enter regex pattern..."
+                placeholder="Enter Go regexp pattern"
                 class="bg-card-surface focus-visible:border-hister-coral h-10 flex-1 px-3"
               />
               <select
