@@ -923,15 +923,16 @@ func servePreview(c *webContext) {
 		serve500(c)
 		return
 	}
-	content, err := extractor.Preview(doc)
+	resp, err := extractor.Preview(doc)
 	if err != nil {
 		log.Warn().Err(err).Str("url", u).Msg("failed to generate preview")
 		serve500(c)
 		return
 	}
 	c.JSON(map[string]string{
-		"title":   doc.Title,
-		"content": content,
+		"title":    doc.Title,
+		"content":  resp.Content,
+		"template": resp.Template,
 	})
 }
 

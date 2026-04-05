@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/asciimoo/hister/server/document"
+	"github.com/asciimoo/hister/server/types"
 )
 
 // Extractor extracts content from a Document.
@@ -35,7 +36,7 @@ type Extractor interface {
 	// The returned bool signals whether the caller should continue trying
 	// subsequent extractors: true means this attempt was inconclusive and the
 	// next matching extractor should be tried
-	Preview(*document.Document) (string, bool, error)
+	Preview(*document.Document) (types.PreviewResponse, bool, error)
 }
 
 // ErrNoExtractor is returned when no extractor can handle the document.
@@ -64,18 +65,21 @@ func Extract(d *document.Document) error {
 
 // Preview returns a rendered preview of the document using the first matching
 // extractor. Returns ErrNoExtractor if none match.
-func Preview(d *document.Document) (string, error) {
+func Preview(d *document.Document) (types.PreviewResponse, error) {
 	for _, e := range extractors {
 		if e.Match(d) {
-			content, cont, err := e.Preview(d)
+			resp, cont, err := e.Preview(d)
 			if err != nil {
 				log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to preview content")
-			} else if !cont {
-				return content, nil
+			} else {
+				return resp, nil
+			}
+			if !cont {
+				break
 			}
 		}
 	}
-	return "", ErrNoExtractor
+	return types.PreviewResponse{}, ErrNoExtractor
 }
 
 type defaultExtractor struct{}
@@ -141,8 +145,8 @@ out:
 	return false, nil
 }
 
-func (e *defaultExtractor) Preview(d *document.Document) (string, bool, error) {
-	return d.Text, false, nil
+func (e *defaultExtractor) Preview(d *document.Document) (types.PreviewResponse, bool, error) {
+	return types.PreviewResponse{Content: d.Text}, false, nil
 }
 
 func (e *readabilityExtractor) Name() string {
@@ -174,19 +178,19 @@ func (e *readabilityExtractor) Extract(d *document.Document) (bool, error) {
 	return false, nil
 }
 
-func (e *readabilityExtractor) Preview(d *document.Document) (string, bool, error) {
+func (e *readabilityExtractor) Preview(d *document.Document) (types.PreviewResponse, bool, error) {
 	r := bytes.NewReader([]byte(d.HTML))
 	u, err := url.Parse(d.URL)
 	if err != nil {
-		return "", false, err
+		return types.PreviewResponse{}, false, err
 	}
 	a, err := readability.FromReader(r, u)
 	if err != nil {
-		return "", true, err
+		return types.PreviewResponse{}, true, err
 	}
 	var htmlContent strings.Builder
 	if err := a.RenderHTML(&htmlContent); err != nil {
-		return "", true, err
+		return types.PreviewResponse{}, true, err
 	}
-	return htmlContent.String(), false, nil
+	return types.PreviewResponse{Content: htmlContent.String()}, false, nil
 }
