@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/asciimoo/hister/server/document"
+	"github.com/asciimoo/hister/server/extractor/extractors/godoc"
 	"github.com/asciimoo/hister/server/types"
 )
 
@@ -43,6 +44,7 @@ type Extractor interface {
 var ErrNoExtractor = errors.New("no extractor found")
 
 var extractors = []Extractor{
+	&godoc.GoDocExtractor{},
 	&readabilityExtractor{},
 	&defaultExtractor{},
 }
@@ -53,6 +55,7 @@ func Extract(d *document.Document) error {
 	for _, e := range extractors {
 		if e.Match(d) {
 			cont, err := e.Extract(d)
+			log.Debug().Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Extracting data")
 			if err != nil {
 				log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to extract content")
 			} else if !cont {
@@ -68,6 +71,7 @@ func Extract(d *document.Document) error {
 func Preview(d *document.Document) (types.PreviewResponse, error) {
 	for _, e := range extractors {
 		if e.Match(d) {
+			log.Debug().Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Creating preview")
 			resp, cont, err := e.Preview(d)
 			if err != nil {
 				log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to preview content")
