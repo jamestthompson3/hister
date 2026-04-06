@@ -14,6 +14,7 @@ import (
 
 	"github.com/asciimoo/hister/server/document"
 	"github.com/asciimoo/hister/server/extractor/extractors/godoc"
+	"github.com/asciimoo/hister/server/extractor/extractors/stackoverflow"
 	"github.com/asciimoo/hister/server/types"
 )
 
@@ -44,6 +45,7 @@ type Extractor interface {
 var ErrNoExtractor = errors.New("no extractor found")
 
 var extractors = []Extractor{
+	&stackoverflow.StackoverflowExtractor{},
 	&godoc.GoDocExtractor{},
 	&readabilityExtractor{},
 	&defaultExtractor{},
