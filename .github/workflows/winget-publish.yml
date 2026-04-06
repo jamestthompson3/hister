@@ -1,0 +1,15 @@
+name: Publish to WinGet
+
+on:
+  push:
+    branches: ['master'] # Trigger on pushes to master branch
+    tags: ['v*.*.*'] # Trigger on semantic version tags (e.g., v1.0.0)
+
+jobs:
+  publish:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: asciimoo.hister
+          token: ${{ secrets.WINGET_TOKEN }}
