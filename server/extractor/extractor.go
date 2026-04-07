@@ -31,17 +31,17 @@ type Extractor interface {
 	Match(*document.Document) bool
 
 	// Extract rewrites documents before the documents are added to the index.
-	// The returned bool signals whether the caller should continue trying
-	// subsequent extractors: true means this attempt was inconclusive and the
-	// next matching extractor should be tried
-	Extract(*document.Document) (bool, error)
+	// The returned ExtractorState signals how the chain should proceed:
+	// ExtractorStop means success, ExtractorContinue means try the next extractor,
+	// ExtractorAbort means stop immediately and return the error.
+	Extract(*document.Document) (types.ExtractorState, error)
 
 	// Preview returns a rendered representation of the document suitable for
 	// display (e.g. readable HTML or plain text).
-	// The returned bool signals whether the caller should continue trying
-	// subsequent extractors: true means this attempt was inconclusive and the
-	// next matching extractor should be tried
-	Preview(*document.Document) (types.PreviewResponse, bool, error)
+	// The returned ExtractorState signals how the chain should proceed:
+	// ExtractorStop means success, ExtractorContinue means try the next extractor,
+	// ExtractorAbort means stop immediately and return the error.
+	Preview(*document.Document) (types.PreviewResponse, types.ExtractorState, error)
 
 	// GetConfig returns the extractor's current configuration. Before
 	// SetConfig is called, implementations must return their default config.
@@ -92,12 +92,17 @@ func Extract(d *document.Document) error {
 			continue
 		}
 		if e.Match(d) {
-			cont, err := e.Extract(d)
+			state, err := e.Extract(d)
 			log.Debug().Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Extracting data")
-			if err != nil {
-				log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to extract content")
-			} else if !cont {
+			switch state {
+			case types.ExtractorStop:
 				return nil
+			case types.ExtractorAbort:
+				return fmt.Errorf("extractor %s: %w", e.Name(), err)
+			default:
+				if err != nil {
+					log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to extract content")
+				}
 			}
 		}
 	}
@@ -113,14 +118,16 @@ func Preview(d *document.Document) (types.PreviewResponse, error) {
 		}
 		if e.Match(d) {
 			log.Debug().Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Creating preview")
-			resp, cont, err := e.Preview(d)
-			if err != nil {
-				log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to preview content")
-			} else {
+			resp, state, err := e.Preview(d)
+			switch state {
+			case types.ExtractorStop:
 				return resp, nil
-			}
-			if !cont {
-				break
+			case types.ExtractorAbort:
+				return types.PreviewResponse{}, fmt.Errorf("extractor %s: %w", e.Name(), err)
+			default:
+				if err != nil {
+					log.Warn().Err(err).Str("URL", d.URL).Str("Extractor", e.Name()).Msg("Failed to preview content")
+				}
 			}
 		}
 	}
@@ -173,7 +180,7 @@ func (e *defaultExtractor) Match(_ *document.Document) bool {
 	return true
 }
 
-func (e *defaultExtractor) Extract(d *document.Document) (bool, error) {
+func (e *defaultExtractor) Extract(d *document.Document) (types.ExtractorState, error) {
 	d.Title = ""
 	r := bytes.NewReader([]byte(d.HTML))
 	doc := html.NewTokenizer(r)
@@ -190,7 +197,7 @@ out:
 			if errors.Is(err, io.EOF) {
 				break out
 			}
-			return false, errors.New("failed to parse html: " + err.Error())
+			return types.ExtractorStop, errors.New("failed to parse html: " + err.Error())
 		case html.SelfClosingTagToken, html.StartTagToken:
 			tn, _ := doc.TagName()
 			currentTag = string(tn)
@@ -219,13 +226,13 @@ out:
 	}
 	d.Text = strings.TrimSpace(text.String())
 	if d.Text == "" && d.Title == "" {
-		return false, errors.New("no content found")
+		return types.ExtractorStop, errors.New("no content found")
 	}
-	return false, nil
+	return types.ExtractorStop, nil
 }
 
-func (e *defaultExtractor) Preview(d *document.Document) (types.PreviewResponse, bool, error) {
-	return types.PreviewResponse{Content: d.Text}, false, nil
+func (e *defaultExtractor) Preview(d *document.Document) (types.PreviewResponse, types.ExtractorState, error) {
+	return types.PreviewResponse{Content: d.Text}, types.ExtractorStop, nil
 }
 
 func (e *readabilityExtractor) Name() string {
@@ -236,40 +243,40 @@ func (e *readabilityExtractor) Match(_ *document.Document) bool {
 	return true
 }
 
-func (e *readabilityExtractor) Extract(d *document.Document) (bool, error) {
+func (e *readabilityExtractor) Extract(d *document.Document) (types.ExtractorState, error) {
 	r := bytes.NewReader([]byte(d.HTML))
 
 	u, err := url.Parse(d.URL)
 	if err != nil {
-		return false, err
+		return types.ExtractorStop, err
 	}
 	a, err := readability.FromReader(r, u)
 	if err != nil {
-		return true, err
+		return types.ExtractorContinue, err
 	}
 	buf := bytes.NewBuffer(nil)
 	if err := a.RenderText(buf); err != nil {
-		return true, err
+		return types.ExtractorContinue, err
 	}
 	d.Text = buf.String()
 	d.Title = a.Title()
 	d.SetFaviconURL(a.Favicon())
-	return false, nil
+	return types.ExtractorStop, nil
 }
 
-func (e *readabilityExtractor) Preview(d *document.Document) (types.PreviewResponse, bool, error) {
+func (e *readabilityExtractor) Preview(d *document.Document) (types.PreviewResponse, types.ExtractorState, error) {
 	r := bytes.NewReader([]byte(d.HTML))
 	u, err := url.Parse(d.URL)
 	if err != nil {
-		return types.PreviewResponse{}, false, err
+		return types.PreviewResponse{}, types.ExtractorStop, err
 	}
 	a, err := readability.FromReader(r, u)
 	if err != nil {
-		return types.PreviewResponse{}, true, err
+		return types.PreviewResponse{}, types.ExtractorContinue, err
 	}
 	var htmlContent strings.Builder
 	if err := a.RenderHTML(&htmlContent); err != nil {
-		return types.PreviewResponse{}, true, err
+		return types.PreviewResponse{}, types.ExtractorContinue, err
 	}
-	return types.PreviewResponse{Content: htmlContent.String()}, false, nil
+	return types.PreviewResponse{Content: htmlContent.String()}, types.ExtractorStop, nil
 }

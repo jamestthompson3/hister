@@ -20,3 +20,21 @@ type PreviewResponse struct {
 	Content  string
 	Template string
 }
+
+// ExtractorState signals to the extractor chain how processing should proceed
+// after an extractor returns.
+type ExtractorState int
+
+const (
+	// ExtractorStop means the extractor handled the document successfully;
+	// stop the chain and return a successful result.
+	ExtractorStop ExtractorState = iota
+
+	// ExtractorContinue means the extractor was inconclusive; try the next
+	// matching extractor in the chain.
+	ExtractorContinue
+
+	// ExtractorAbort means a fatal error occurred; stop the chain immediately
+	// and propagate the error to the caller.
+	ExtractorAbort
+)

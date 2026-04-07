@@ -44,16 +44,16 @@ func (e *StackoverflowExtractor) Match(d *document.Document) bool {
 	return strings.HasPrefix(d.URL, matchURLPrefix) && len(d.URL) > len(matchURLPrefix)
 }
 
-func (e *StackoverflowExtractor) Extract(d *document.Document) (bool, error) {
-	return true, nil
+func (e *StackoverflowExtractor) Extract(d *document.Document) (types.ExtractorState, error) {
+	return types.ExtractorContinue, nil
 }
 
-func (e *StackoverflowExtractor) Preview(d *document.Document) (types.PreviewResponse, bool, error) {
+func (e *StackoverflowExtractor) Preview(d *document.Document) (types.PreviewResponse, types.ExtractorState, error) {
 	// TODO include more details about the question/answers
 	// TODO rewrite URLs and references to absolute
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(d.HTML))
 	if err != nil {
-		return types.PreviewResponse{}, false, err
+		return types.PreviewResponse{}, types.ExtractorContinue, err
 	}
 
 	// remove the "copy" panel
@@ -61,7 +61,7 @@ func (e *StackoverflowExtractor) Preview(d *document.Document) (types.PreviewRes
 
 	question, err := doc.Find(".js-post-body").Html()
 	if err != nil {
-		return types.PreviewResponse{}, false, err
+		return types.PreviewResponse{}, types.ExtractorContinue, err
 	}
 
 	answers := make([]string, 0)
@@ -77,5 +77,5 @@ func (e *StackoverflowExtractor) Preview(d *document.Document) (types.PreviewRes
 		question,
 		strings.Join(answers, "<hr />"),
 	)
-	return types.PreviewResponse{Content: sanitizer.SanitizeHTML(res)}, false, nil
+	return types.PreviewResponse{Content: sanitizer.SanitizeHTML(res)}, types.ExtractorStop, nil
 }
