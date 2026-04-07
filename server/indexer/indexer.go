@@ -37,7 +37,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var Version = 4
+var Version = 5
 
 type indexer struct {
 	idx               bleve.IndexAlias       // used only for Search()
@@ -79,8 +79,9 @@ type MultiBatch struct {
 }
 
 var (
-	i              *indexer
-	allFields      []string       = []string{"url", "title", "text", "favicon", "html", "domain", "added", "type", "user_id"}
+	i *indexer
+	// allFields      []string       = []string{"url", "title", "text", "favicon", "html", "domain", "added", "type", "user_id"}
+	allFields      []string       = []string{"*"}
 	ErrEmptyFilter                = errors.New("delete query must not be empty")
 	bleveConfig    map[string]any = map[string]any{
 		"bolt_timeout": "2s",
@@ -624,39 +625,18 @@ func resFromHit(h *search.DocumentMatch) *document.Document {
 	if t, ok := h.Fields["user_id"].(float64); ok {
 		d.UserID = uint(t)
 	}
+	for k, v := range h.Fields {
+		if mk, found := strings.CutPrefix(k, "metadata."); found {
+			d.Metadata[mk] = v
+		}
+	}
 	return d
 }
 
 func docFromHit(h *search.DocumentMatch) *document.Document {
-	d := &document.Document{}
-	if t, ok := h.Fragments["title"]; ok {
-		d.Title = t[0]
-	} else if s, ok := h.Fields["title"].(string); ok {
-		d.Title = s
-	}
-	if s, ok := h.Fields["url"].(string); ok {
-		d.URL = s
-	}
-	if t, ok := h.Fragments["text"]; ok {
-		d.Text = t[0]
-	}
+	d := resFromHit(h)
 	if s, ok := h.Fields["html"].(string); ok {
 		d.HTML = s
-	}
-	if s, ok := h.Fields["favicon"].(string); ok {
-		d.Favicon = s
-	}
-	if s, ok := h.Fields["domain"].(string); ok {
-		d.Domain = s
-	}
-	if t, ok := h.Fields["added"].(float64); ok {
-		d.Added = int64(t)
-	}
-	if t, ok := h.Fields["type"].(float64); ok {
-		d.Type = types.DocType(t)
-	}
-	if t, ok := h.Fields["user_id"].(float64); ok {
-		d.UserID = uint(t)
 	}
 	return d
 }
@@ -753,6 +733,7 @@ func createMapping(lang string) mapping.IndexMapping {
 	docMapping.AddFieldMappingsAt("language", um)
 	docMapping.AddFieldMappingsAt("favicon", noIdxMap)
 	docMapping.AddFieldMappingsAt("html", noIdxMap)
+	docMapping.AddFieldMappingsAt("metadata", noIdxMap)
 	docMapping.AddFieldMappingsAt("added", bleve.NewNumericFieldMapping())
 	docMapping.AddFieldMappingsAt("type", bleve.NewNumericFieldMapping())
 	docMapping.AddFieldMappingsAt("user_id", bleve.NewNumericFieldMapping())
