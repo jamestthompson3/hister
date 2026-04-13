@@ -53,15 +53,16 @@ const (
 )
 
 type Query struct {
-	Text      string `json:"text"`
-	Highlight string `json:"highlight"`
-	Limit     int    `json:"limit"`
-	Sort      string `json:"sort"`
-	DateFrom  int64  `json:"date_from"`
-	DateTo    int64  `json:"date_to"`
-	UserID    uint   `json:"user_id"`
-	PageKey   string `json:"page_key"`
-	cfg       *config.Config
+	Text        string `json:"text"`
+	Highlight   string `json:"highlight"`
+	Limit       int    `json:"limit"`
+	Sort        string `json:"sort"`
+	DateFrom    int64  `json:"date_from"`
+	DateTo      int64  `json:"date_to"`
+	UserID      uint   `json:"user_id"`
+	PageKey     string `json:"page_key"`
+	IncludeHTML bool   `json:"include_html"`
+	cfg         *config.Config
 }
 
 type Results struct {
@@ -593,7 +594,11 @@ func Search(cfg *config.Config, q *Query) (*Results, error) {
 	}
 	matches := make([]*document.Document, len(res.Hits))
 	for j, v := range res.Hits {
-		matches[j] = resFromHit(v)
+		if q.IncludeHTML {
+			matches[j] = docFromHit(v)
+		} else {
+			matches[j] = resFromHit(v)
+		}
 	}
 	r := &Results{
 		Total:     res.Total,

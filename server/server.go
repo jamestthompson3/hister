@@ -639,6 +639,9 @@ func serveSearch(c *webContext) {
 		if s := c.Request.URL.Query().Get("sort"); s != "" {
 			query.Sort = s
 		}
+		if c.Request.URL.Query().Get("include_html") == "1" {
+			query.IncludeHTML = true
+		}
 		r, err := doSearch(query, c.Config, c.effectiveRules(), c.UserID)
 		if err != nil {
 			fmt.Println(err)
