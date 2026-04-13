@@ -766,12 +766,17 @@ func serveAdd(c *webContext) {
 			}
 		}
 		err := indexer.Add(d)
-		log.Debug().Str("URL", d.URL).Msg("item added to index")
 		if err != nil {
+			if errors.Is(err, document.ErrSensitiveContent) {
+				log.Warn().Str("URL", d.URL).Msg("rejected document: sensitive content")
+				http.Error(c.Response, document.ErrSensitiveContent.Error(), http.StatusUnprocessableEntity)
+				return
+			}
 			log.Error().Err(err).Str("URL", d.URL).Msg("failed to create index")
 			serve500(c)
 			return
 		}
+		log.Debug().Str("URL", d.URL).Msg("item added to index")
 		c.Response.WriteHeader(http.StatusCreated)
 	} else {
 		log.Debug().Str("url", d.URL).Msg("skip indexing")
@@ -1223,8 +1228,13 @@ func serveBatch(c *webContext) {
 				continue
 			}
 			if err := batch.Add(d); err != nil {
-				log.Error().Err(err).Str("URL", op.URL).Msg("batch add error")
-				results[i] = batchOpResult{Status: http.StatusInternalServerError, Error: "internal error"}
+				if errors.Is(err, document.ErrSensitiveContent) {
+					log.Warn().Str("URL", op.URL).Msg("rejected document: sensitive content")
+					results[i] = batchOpResult{Status: http.StatusUnprocessableEntity, Error: document.ErrSensitiveContent.Error()}
+				} else {
+					log.Error().Err(err).Str("URL", op.URL).Msg("batch add error")
+					results[i] = batchOpResult{Status: http.StatusInternalServerError, Error: "internal error"}
+				}
 			} else {
 				results[i] = batchOpResult{Status: http.StatusCreated}
 			}

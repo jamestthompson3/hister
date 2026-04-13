@@ -87,15 +87,24 @@
 
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs?.length) return;
-        chrome.action.getBadgeText({ tabId: tabs[0].id! }, (badgeText) => {
+        const tab = tabs[0];
+        chrome.action.getBadgeText({ tabId: tab.id! }, (badgeText) => {
           if (badgeText === '!') {
             setErrorMessage('Failed to send page data to server');
           }
         });
-        const currentTabURL = tabs[0].url;
+        const currentTabURL = tab.url;
         if (currentTabURL) {
           tabURL = currentTabURL;
           checkTabSkipRule(currentTabURL);
+          chrome.runtime.sendMessage(
+            { action: 'getTabState', tabId: tab.id, url: currentTabURL },
+            (resp) => {
+              if (resp?.isSensitive) {
+                setInfoMessage('Page not indexed: it contains sensitive data');
+              }
+            },
+          );
         }
       });
     },

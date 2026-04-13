@@ -62,6 +62,15 @@ function setNormalIcon(tabId: number): void {
   );
 }
 
+// --- Per-tab sensitive-content rejection state ---
+
+// Maps tabId → URL that was last rejected due to sensitive content.
+const tabSensitiveState = new Map<number, string>();
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  tabSensitiveState.delete(tabId);
+});
+
 // --- Skip rules cache ---
 
 interface SkipRulesCache {
@@ -193,6 +202,12 @@ function cjsMsgHandler(request, sender, sendResponse) {
         customHeaders.push({ name: 'X-Access-Token', value: data['histerToken'] });
       }
 
+      if (request.action === 'getTabState') {
+        const stored = tabSensitiveState.get(request.tabId as number);
+        sendResponse({ isSensitive: stored !== undefined && stored === request.url });
+        return;
+      }
+
       if (request.action === 'addSkipRule') {
         if (!u) {
           sendResponse({ error: 'No server URL configured' });
@@ -266,6 +281,10 @@ function cjsMsgHandler(request, sender, sendResponse) {
             } else if (r.status === 406) {
               // URL matched a server-side skip rule; invalidate cache and grey out
               skipRulesCache = null;
+              setGreyIcon(sender.tab.id);
+            } else if (r.status === 422) {
+              // Document rejected due to sensitive content; not an error
+              tabSensitiveState.set(sender.tab.id, sender.tab.url ?? '');
               setGreyIcon(sender.tab.id);
             } else {
               setErrorBadge(sender.tab.id);
