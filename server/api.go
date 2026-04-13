@@ -177,6 +177,15 @@ func init() {
 			Description:  "Document preview",
 		},
 		{
+			Name:         "Extractors",
+			Path:         "/api/extractors",
+			Method:       GET,
+			CSRFRequired: false,
+			NoAuth:       true,
+			Handler:      serveExtractors,
+			Description:  "List all registered extractors with their name, description, and enabled state",
+		},
+		{
 			Name:         "Stats",
 			Path:         "/api/stats",
 			Method:       GET,

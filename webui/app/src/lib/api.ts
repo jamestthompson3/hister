@@ -8,6 +8,13 @@ export interface AppConfig {
   userId?: number;
 }
 
+export interface ExtractorInfo {
+  name: string;
+  description: string;
+  enabled: boolean;
+  options?: Record<string, unknown>;
+}
+
 let _config: AppConfig | null = null;
 let _csrf: string = '';
 
@@ -91,4 +98,12 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
   const newTok = res.headers.get('X-CSRF-Token');
   if (newTok) _csrf = newTok;
   return res;
+}
+
+export async function fetchExtractors(): Promise<ExtractorInfo[]> {
+  const res = await apiFetch('/extractors');
+  if (!res.ok) {
+    throw new Error('Failed to fetch extractors');
+  }
+  return res.json();
 }

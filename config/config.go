@@ -45,14 +45,15 @@ type Config struct {
 }
 
 type App struct {
-	Directory           string `yaml:"directory" mapstructure:"directory"`
-	SearchURL           string `yaml:"search_url" mapstructure:"search_url"`
-	AccessToken         string `yaml:"access_token" mapstructure:"access_token"`
-	UserHandling        bool   `yaml:"user_handling" mapstructure:"user_handling"`
-	LogLevel            string `yaml:"log_level" mapstructure:"log_level"`
-	DebugSQL            bool   `yaml:"debug_sql" mapstructure:"debug_sql"`
-	OpenResultsOnNewTab bool   `yaml:"open_results_on_new_tab" mapstructure:"open_results_on_new_tab"`
-	RedirectOnNoResults bool   `yaml:"redirect_on_no_results" mapstructure:"redirect_on_no_results"`
+	Directory              string `yaml:"directory" mapstructure:"directory"`
+	SearchURL              string `yaml:"search_url" mapstructure:"search_url"`
+	AccessToken            string `yaml:"access_token" mapstructure:"access_token"`
+	UserHandling           bool   `yaml:"user_handling" mapstructure:"user_handling"`
+	LogLevel               string `yaml:"log_level" mapstructure:"log_level"`
+	DebugSQL               bool   `yaml:"debug_sql" mapstructure:"debug_sql"`
+	OpenResultsOnNewTab    bool   `yaml:"open_results_on_new_tab" mapstructure:"open_results_on_new_tab"`
+	RedirectOnNoResults    bool   `yaml:"redirect_on_no_results" mapstructure:"redirect_on_no_results"`
+	DisplayExtractorConfig bool   `yaml:"display_extractor_config" mapstructure:"display_extractor_config"`
 }
 
 type TUI struct {
@@ -322,11 +323,12 @@ func Load(filename string) (*Config, error) {
 func CreateDefaultConfig() *Config {
 	return &Config{
 		App: App{
-			SearchURL:           "https://google.com/search?q={query}",
-			Directory:           getDefaultDataDir(),
-			LogLevel:            "info",
-			OpenResultsOnNewTab: false,
-			RedirectOnNoResults: true,
+			SearchURL:              "https://google.com/search?q={query}",
+			Directory:              getDefaultDataDir(),
+			LogLevel:               "info",
+			OpenResultsOnNewTab:    false,
+			RedirectOnNoResults:    true,
+			DisplayExtractorConfig: false,
 		},
 		Server: Server{
 			Address:  "127.0.0.1:4433",

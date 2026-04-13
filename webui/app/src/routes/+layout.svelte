@@ -108,6 +108,11 @@
       >Help</a
     >
     <a
+      href="extractors"
+      class="font-space text-text-brand-secondary hover:text-hister-indigo text-[13px] tracking-[1px] uppercase no-underline hover:underline"
+      >Extractors</a
+    >
+    <a
       href="about"
       class="font-space text-text-brand-secondary hover:text-hister-indigo text-[13px] tracking-[1px] uppercase no-underline hover:underline"
       >About</a

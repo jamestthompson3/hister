@@ -59,6 +59,31 @@ type Extractor interface {
 // ErrNoExtractor is returned when no extractor can handle the document.
 var ErrNoExtractor = errors.New("no extractor found")
 
+// ExtractorInfo holds a summary of an extractor's identity and current state.
+type ExtractorInfo struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Enabled     bool           `json:"enabled"`
+	Options     map[string]any `json:"options,omitempty"`
+}
+
+// List returns an ExtractorInfo entry for every registered extractor in chain
+// order. Options is always populated; callers that should not expose
+// configuration must clear or omit it before sending to clients.
+func List() []ExtractorInfo {
+	infos := make([]ExtractorInfo, 0, len(extractors))
+	for _, e := range extractors {
+		cfg := e.GetConfig()
+		infos = append(infos, ExtractorInfo{
+			Name:        e.Name(),
+			Description: e.Description(),
+			Enabled:     cfg.Enable,
+			Options:     cfg.Options,
+		})
+	}
+	return infos
+}
+
 var extractors = []Extractor{
 	&stackoverflow.StackoverflowExtractor{},
 	&godoc.GoDocExtractor{},

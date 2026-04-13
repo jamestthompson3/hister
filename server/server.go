@@ -1059,6 +1059,16 @@ func serveStats(c *webContext) {
 	})
 }
 
+func serveExtractors(c *webContext) {
+	infos := extractor.List()
+	if !c.Config.App.DisplayExtractorConfig {
+		for i := range infos {
+			infos[i].Options = nil
+		}
+	}
+	c.JSON(infos)
+}
+
 func serveOpensearch(c *webContext) {
 	baseURL := strings.TrimSuffix(c.Config.BaseURL("/"), "/")
 	xml := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
