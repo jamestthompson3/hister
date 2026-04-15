@@ -33,8 +33,14 @@ if (typeof window.navigation !== 'undefined') {
   window.navigation.addEventListener('navigatesuccess', update);
 }
 
-function extract(sendResponse, actionType) {
+function extract(sendResponse, actionType, force) {
   if (!isContextValid()) return;
+  const navEntry = window.performance.getEntries().find((e) => e.entryType === 'navigation') as
+    | PerformanceNavigationTiming
+    | undefined;
+  if (navEntry && navEntry.responseStatus > 299 && !force) {
+    return;
+  }
   registerResultExtractor(window, (r) => {
     if (isContextValid()) chrome.runtime.sendMessage({ resultData: r });
   });
@@ -94,7 +100,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return;
   }
   if (request.action == 'reindex') {
-    extract(sendResponse, 'reindex');
+    extract(sendResponse, 'reindex', true);
     return true;
   }
   console.log('message received', request);
