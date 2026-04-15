@@ -22,6 +22,80 @@ To manually index a specific URL:
 ./hister index https://example.com
 ```
 
+### Crawling Websites
+
+Use `--recursive` (`-r`) to recursively crawl a website starting from a given URL.
+Every crawl runs as a **persistent job** backed by the database, so it can be interrupted
+and resumed at any time without losing progress.
+
+#### Start a crawl
+
+```bash
+hister index -r https://example.com
+```
+
+A random job ID is generated and printed when the crawl starts. Keep it if you want to
+resume later.
+
+#### Specify your own job ID
+
+```bash
+hister index -r --job-id my-docs https://example.com/docs
+```
+
+#### Resume an interrupted crawl
+
+Pass the same `--job-id` without any URL arguments:
+
+```bash
+hister index --job-id my-docs
+```
+
+Hister restores the original validator rules and picks up exactly where it left off.
+
+#### Limit the crawl scope
+
+| Flag                | Description                                              |
+| ------------------- | -------------------------------------------------------- |
+| `--max-depth N`     | Stop following links deeper than N levels (0 = no limit) |
+| `--max-links N`     | Stop after visiting N pages in total (0 = no limit)      |
+| `--allowed-domain`  | Only follow links on this domain (repeatable)            |
+| `--exclude-domain`  | Never follow links on this domain (repeatable)           |
+| `--allowed-pattern` | Only follow URLs matching this regexp (repeatable)       |
+| `--exclude-pattern` | Skip URLs matching this regexp (repeatable)              |
+
+Example: crawl only the docs subdomain, up to 200 pages:
+
+```bash
+hister index -r \
+  --job-id docs-crawl \
+  --allowed-domain docs.example.com \
+  --max-links 200 \
+  https://docs.example.com
+```
+
+### Managing Crawl Jobs
+
+Use the `crawl` command to inspect and clean up persistent crawl jobs.
+
+#### List all jobs
+
+```bash
+hister crawl list
+```
+
+Output shows the job ID, status (`running`, `completed`, `interrupted`), start URL, and
+per-status URL counts (pending, done, failed, skipped).
+
+#### Delete a job
+
+```bash
+hister crawl delete my-docs
+```
+
+This removes the job record and all associated URL tracking data from the database.
+The documents that were already indexed are not affected.
+
 ## TUI (Terminal UI)
 
 Hister provides a terminal-based user interface for searching your browsing history without leaving your terminal.
