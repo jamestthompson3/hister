@@ -5,6 +5,9 @@
   ...
 }:
 let
+  yamlFormat = pkgs.formats.yaml { };
+  cfg = config.services.hister;
+  hasSettings = cfg.settings != { };
   mkHisterEnv =
     cfg:
     lib.optionalAttrs (cfg.dataDir != null) {
@@ -16,11 +19,15 @@ let
     // lib.optionalAttrs (cfg.configPath != null) {
       HISTER_CONFIG = builtins.toString cfg.configPath;
     }
-    // lib.optionalAttrs (cfg.config != null) {
-      HISTER_CONFIG = "${(pkgs.formats.yaml { }).generate "hister-config.yml" cfg.config}";
+    // lib.optionalAttrs (cfg.settings != { }) {
+      HISTER_CONFIG = "${yamlFormat.generate "hister-config.yml" cfg.settings}";
     };
 in
 {
+  imports = [
+    (lib.mkRenamedOptionModule [ "services" "hister" "config" ] [ "services" "hister" "settings" ])
+  ];
+
   options.services.hister = {
     enable = lib.mkEnableOption "Hister web history service";
 
@@ -68,36 +75,78 @@ in
       '';
     };
 
-    config = lib.mkOption {
-      type = with lib.types; nullOr attrs;
-      default = null;
-      description = "Configuration as a Nix attribute set. This will be converted to a YAML file.";
-      example = {
-        app = {
-          search_url = "https://google.com/search?q={query}";
-          log_level = "info";
-        };
-        server = {
-          address = "127.0.0.1:4433";
-          database = "db.sqlite3";
-        };
-        hotkeys = {
-          "/" = "focus_search_input";
-          "enter" = "open_result";
-          "alt+enter" = "open_result_in_new_tab";
-          "alt+j" = "select_next_result";
-          "alt+k" = "select_previous_result";
-          "alt+o" = "open_query_in_search_engine";
+    settings = lib.mkOption {
+      type = lib.types.submodule {
+        freeformType = yamlFormat.type;
+        options = {
+          app = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "App section (maps to the `app:` block of config.yml).";
+          };
+          server = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "Server section (maps to the `server:` block of config.yml).";
+          };
+          indexer = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "Indexer section (maps to the `indexer:` block of config.yml).";
+          };
+          crawler = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "Crawler section (maps to the `crawler:` block of config.yml).";
+          };
+          hotkeys = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "Hotkeys section (maps to the `hotkeys:` block of config.yml).";
+          };
+          extractors = lib.mkOption {
+            type = lib.types.submodule { freeformType = yamlFormat.type; };
+            default = { };
+            description = "Extractors section (maps to the `extractors:` block of config.yml).";
+          };
+          sensitive_content_patterns = lib.mkOption {
+            type = lib.types.attrsOf lib.types.str;
+            default = { };
+            description = "Regular expressions for redacting sensitive content.";
+          };
         };
       };
+      default = { };
+      description = ''
+        Hister configuration rendered to YAML and passed via HISTER_CONFIG.
+        Accepts any structure the server accepts — see the `app`, `server`,
+        `indexer`, `crawler`, `hotkeys`, `extractors`, and
+        `sensitive_content_patterns` blocks documented upstream.
+      '';
+      example = lib.literalExpression ''
+        {
+          app = {
+            search_url = "https://google.com/search?q={query}";
+            log_level = "info";
+          };
+          server = {
+            address = "127.0.0.1:4433";
+            database = "db.sqlite3";
+          };
+          hotkeys.web = {
+            "/" = "focus_search_input";
+            "enter" = "open_result";
+          };
+        }
+      '';
     };
   };
 
   config = {
     assertions = [
       {
-        assertion = !(config.services.hister.configPath != null && config.services.hister.config != null);
-        message = "Only one of services.hister.configPath and services.hister.config can be set";
+        assertion = !(cfg.configPath != null && hasSettings);
+        message = "Only one of services.hister.configPath and services.hister.settings can be set";
       }
     ];
     _module.args.histerEnv = mkHisterEnv;
