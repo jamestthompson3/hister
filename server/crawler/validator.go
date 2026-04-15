@@ -3,6 +3,7 @@
 package crawler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -74,6 +75,19 @@ func NewValidator(rules *ValidatorRules) (*Validator, error) {
 	return v, nil
 }
 
+// Rules returns the ValidatorRules used to create this Validator.
+// The returned pointer must not be mutated.
+func (v *Validator) Rules() *ValidatorRules {
+	return v.rules
+}
+
+// SetVisited pre-seeds the visited counter (used when resuming a job).
+func (v *Validator) SetVisited(n int) {
+	v.mu.Lock()
+	v.visited = n
+	v.mu.Unlock()
+}
+
 // Validate checks whether u at the given crawl depth should be visited.
 // When URLAllow is returned the internal visited counter is incremented,
 // so the same Validator instance tracks how many pages have been allowed.
@@ -133,4 +147,22 @@ func (v *Validator) Validate(u *url.URL, depth int) URLStatus {
 
 	v.visited++
 	return URLAllow
+}
+
+// MarshalValidatorRules serializes rules to a JSON string for storage.
+func MarshalValidatorRules(rules *ValidatorRules) (string, error) {
+	b, err := json.Marshal(rules)
+	if err != nil {
+		return "", fmt.Errorf("marshal validator rules: %w", err)
+	}
+	return string(b), nil
+}
+
+// UnmarshalValidatorRules deserializes rules from a JSON string.
+func UnmarshalValidatorRules(s string) (*ValidatorRules, error) {
+	var rules ValidatorRules
+	if err := json.Unmarshal([]byte(s), &rules); err != nil {
+		return nil, fmt.Errorf("unmarshal validator rules: %w", err)
+	}
+	return &rules, nil
 }

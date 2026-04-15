@@ -71,6 +71,8 @@ func automigrate() error {
 		&HistoryLink{},
 		&IndexerVersion{},
 		&User{},
+		&CrawlJob{},
+		&CrawlURL{},
 	)
 }
 

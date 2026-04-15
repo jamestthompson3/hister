@@ -380,7 +380,14 @@ var indexCmd = &cobra.Command{
 	Use:   "index URL [URL...]",
 	Short: "Index URL [URL...]",
 	Long:  "Index one or more URLs",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.MinimumNArgs(0),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		recursive, _ := cmd.Flags().GetBool("recursive")
+		jobID, _ := cmd.Flags().GetString("job-id")
+		if recursive || jobID != "" {
+			initDB()
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		global, _ := cmd.Flags().GetBool("global")
 		targetUserID, _ := cmd.Flags().GetUint("user-id")
@@ -398,30 +405,91 @@ var indexCmd = &cobra.Command{
 
 		force, _ := cmd.Flags().GetBool("force")
 		recursive, _ := cmd.Flags().GetBool("recursive")
-		if recursive {
-			maxDepth, _ := cmd.Flags().GetInt("max-depth")
-			maxLinks, _ := cmd.Flags().GetInt("max-links")
-			allowedDomains, _ := cmd.Flags().GetStringArray("allowed-domain")
-			excludeDomains, _ := cmd.Flags().GetStringArray("exclude-domain")
-			allowedPatterns, _ := cmd.Flags().GetStringArray("allowed-pattern")
-			excludePatterns, _ := cmd.Flags().GetStringArray("exclude-pattern")
+		jobID, _ := cmd.Flags().GetString("job-id")
+		cfg.Crawler.UserAgent = UserAgent
 
-			rules := &crawler.ValidatorRules{
-				MaxDepth:        maxDepth,
-				MaxLinks:        maxLinks,
-				AllowedDomains:  allowedDomains,
-				ExcludeDomains:  excludeDomains,
-				AllowedPatterns: allowedPatterns,
-				ExcludePatterns: excludePatterns,
+		if recursive {
+			// Persistent crawl mode (always).
+
+			var (
+				startURL       string
+				validatorRules *crawler.ValidatorRules
+			)
+
+			// Generate a random job ID when none was given.
+			if jobID == "" {
+				var err error
+				jobID, err = model.GenerateCrawlJobID()
+				if err != nil {
+					exit(1, "Failed to generate crawl job ID: "+err.Error())
+				}
 			}
-			validator, err := crawler.NewValidator(rules)
+
+			existingJob, err := model.GetCrawlJob(jobID)
+			if err != nil {
+				exit(1, "Failed to load crawl job: "+err.Error())
+			}
+
+			if existingJob == nil {
+				// New job: require at least one URL.
+				if len(args) == 0 {
+					exit(1, "at least one URL is required to start a new crawl job")
+				}
+				startURL = args[0]
+
+				maxDepth, _ := cmd.Flags().GetInt("max-depth")
+				maxLinks, _ := cmd.Flags().GetInt("max-links")
+				allowedDomains, _ := cmd.Flags().GetStringArray("allowed-domain")
+				excludeDomains, _ := cmd.Flags().GetStringArray("exclude-domain")
+				allowedPatterns, _ := cmd.Flags().GetStringArray("allowed-pattern")
+				excludePatterns, _ := cmd.Flags().GetStringArray("exclude-pattern")
+
+				validatorRules = &crawler.ValidatorRules{
+					MaxDepth:        maxDepth,
+					MaxLinks:        maxLinks,
+					AllowedDomains:  allowedDomains,
+					ExcludeDomains:  excludeDomains,
+					AllowedPatterns: allowedPatterns,
+					ExcludePatterns: excludePatterns,
+				}
+
+				rulesJSON, err := crawler.MarshalValidatorRules(validatorRules)
+				if err != nil {
+					exit(1, "Failed to serialize validator rules: "+err.Error())
+				}
+				if err := model.CreateCrawlJob(jobID, startURL, rulesJSON); err != nil {
+					exit(1, "Failed to create crawl job: "+err.Error())
+				}
+				fmt.Println("Starting crawl job:", jobID)
+			} else {
+				// Resume existing job.
+				startURL = existingJob.StartURL
+				validatorRules, err = crawler.UnmarshalValidatorRules(existingJob.ValidatorRules)
+				if err != nil {
+					exit(1, "Failed to restore validator rules: "+err.Error())
+				}
+				fmt.Println("Resuming crawl job:", jobID)
+			}
+
+			validator, err := crawler.NewValidator(validatorRules)
 			if err != nil {
 				exit(1, "Invalid crawler rules: "+err.Error())
 			}
-			cfg.Crawler.UserAgent = UserAgent
-			cr, err := crawler.New(&cfg.Crawler)
+
+			// Pre-seed visited counter from already-processed URLs.
+			done, err := model.CountCrawlURLsByStatus(jobID, model.CrawlURLDone)
 			if err != nil {
-				exit(1, "Failed to initialize crawler: "+err.Error())
+				exit(1, "Failed to count done URLs: "+err.Error())
+			}
+			failed, err := model.CountCrawlURLsByStatus(jobID, model.CrawlURLFailed)
+			if err != nil {
+				exit(1, "Failed to count failed URLs: "+err.Error())
+			}
+			validator.SetVisited(int(done + failed))
+
+			cr, err := crawler.NewPersistent(&cfg.Crawler, jobID)
+			if err != nil {
+				exit(1, "Failed to initialize persistent crawler: "+err.Error())
 			}
 			defer func() {
 				if err := cr.Close(); err != nil {
@@ -429,26 +497,76 @@ var indexCmd = &cobra.Command{
 				}
 			}()
 
-			for _, u := range args {
-				if err := crawlAndIndex(u, cr, validator, force, clientOpts...); err != nil {
-					exit(1, "Crawl failed: "+err.Error())
+			if err := crawlAndIndex(startURL, cr, validator, force, clientOpts...); err != nil {
+				exit(1, "Crawl failed: "+err.Error())
+			}
+			return
+		}
+
+		// Resume an existing job by ID without --recursive.
+		if jobID != "" {
+			existingJob, err := model.GetCrawlJob(jobID)
+			if err != nil {
+				exit(1, "Failed to load crawl job: "+err.Error())
+			}
+			if existingJob == nil {
+				exit(1, "Crawl job not found: "+jobID+". Use --recursive to start a new job.")
+			}
+
+			validatorRules, err := crawler.UnmarshalValidatorRules(existingJob.ValidatorRules)
+			if err != nil {
+				exit(1, "Failed to restore validator rules: "+err.Error())
+			}
+			fmt.Println("Resuming crawl job:", jobID)
+
+			validator, err := crawler.NewValidator(validatorRules)
+			if err != nil {
+				exit(1, "Invalid crawler rules: "+err.Error())
+			}
+
+			done, err := model.CountCrawlURLsByStatus(jobID, model.CrawlURLDone)
+			if err != nil {
+				exit(1, "Failed to count done URLs: "+err.Error())
+			}
+			failed, err := model.CountCrawlURLsByStatus(jobID, model.CrawlURLFailed)
+			if err != nil {
+				exit(1, "Failed to count failed URLs: "+err.Error())
+			}
+			validator.SetVisited(int(done + failed))
+
+			cr, err := crawler.NewPersistent(&cfg.Crawler, jobID)
+			if err != nil {
+				exit(1, "Failed to initialize persistent crawler: "+err.Error())
+			}
+			defer func() {
+				if err := cr.Close(); err != nil {
+					log.Warn().Err(err).Msg("crawler close error")
+				}
+			}()
+
+			if err := crawlAndIndex(existingJob.StartURL, cr, validator, force, clientOpts...); err != nil {
+				exit(1, "Crawl failed: "+err.Error())
+			}
+			return
+		}
+
+		// Plain index mode (no crawling).
+		if len(args) == 0 {
+			exit(1, "at least one URL is required")
+		}
+		c := newClient(clientOpts...)
+		for _, u := range args {
+			if !force {
+				exists, err := c.DocumentExists(u)
+				if err != nil {
+					log.Warn().Err(err).Str("URL", u).Msg("Failed to check if URL is already indexed")
+				} else if exists {
+					log.Info().Str("URL", u).Msg("URL already indexed, skipping (use --force to reindex)")
+					continue
 				}
 			}
-		} else {
-			c := newClient(clientOpts...)
-			for _, u := range args {
-				if !force {
-					exists, err := c.DocumentExists(u)
-					if err != nil {
-						log.Warn().Err(err).Str("URL", u).Msg("Failed to check if URL is already indexed")
-					} else if exists {
-						log.Info().Str("URL", u).Msg("URL already indexed, skipping (use --force to reindex)")
-						continue
-					}
-				}
-				if err := indexURL(u, clientOpts...); err != nil {
-					log.Warn().Err(err).Str("URL", u).Msg("Failed to index URL")
-				}
+			if err := indexURL(u, clientOpts...); err != nil {
+				log.Warn().Err(err).Str("URL", u).Msg("Failed to index URL")
 			}
 		}
 	},
@@ -465,6 +583,7 @@ func init() {
 	indexCmd.Flags().StringArray("exclude-pattern", nil, "Regexp pattern; matching URLs are skipped (repeatable)")
 	indexCmd.Flags().Bool("global", false, "Make indexed documents available for all users (only for admins in multiuser mode)")
 	indexCmd.Flags().Uint("user-id", 0, "Index documents under the given user ID (only for admins in multiuser mode)")
+	indexCmd.Flags().String("job-id", "", "Persistent crawl job ID; use with --recursive to start a new job or alone to resume an existing one")
 }
 
 var deleteCmd = &cobra.Command{
@@ -686,8 +805,65 @@ var updateUserCmd = &cobra.Command{
 	},
 }
 
+var crawlCmd = &cobra.Command{
+	Use:   "crawl",
+	Short: "Manage persistent crawl jobs",
+	Long:  "Manage persistent crawl jobs",
+}
+
+var crawlListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List persistent crawl jobs",
+	Long:  "Display all persistent crawl jobs with their status and URL counts",
+	Args:  cobra.NoArgs,
+	PreRun: func(_ *cobra.Command, _ []string) {
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		jobs, err := model.ListCrawlJobs()
+		if err != nil {
+			exit(1, "Failed to list crawl jobs: "+err.Error())
+		}
+		if len(jobs) == 0 {
+			fmt.Println("No crawl jobs found.")
+			return
+		}
+		for _, j := range jobs {
+			stats, err := model.GetCrawlJobStats(j.ID)
+			if err != nil {
+				log.Warn().Err(err).Str("job_id", j.ID).Msg("failed to get job stats")
+			}
+			fmt.Printf("%s  %-12s  %s\n",
+				cliInfoStyle.Render(j.ID),
+				j.Status,
+				j.StartURL,
+			)
+			fmt.Printf("  pending: %d  done: %d  failed: %d  skipped: %d  created: %s\n",
+				stats.Pending, stats.Done, stats.Failed, stats.Skipped,
+				j.CreatedAt.Format("2006-01-02 15:04:05"),
+			)
+		}
+	},
+}
+
+var crawlDeleteCmd = &cobra.Command{
+	Use:   "delete JOB_ID",
+	Short: "Delete a persistent crawl job",
+	Long:  "Delete a crawl job and all its associated URL tracking data",
+	Args:  cobra.ExactArgs(1),
+	PreRun: func(_ *cobra.Command, _ []string) {
+		initDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		jobID := args[0]
+		if err := model.DeleteCrawlJob(jobID); err != nil {
+			exit(1, "Failed to delete crawl job: "+err.Error())
+		}
+		fmt.Println(cliSuccessStyle.Render("✓") + " Crawl job deleted: " + cliInfoStyle.Render(jobID))
+	},
+}
+
 var reindexCmd = &cobra.Command{
-	Use:   "reindex",
 	Short: "Reindex",
 	Long:  `Recreate index`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -741,6 +917,9 @@ func init() {
 	rootCmd.AddCommand(deleteUserCmd)
 	rootCmd.AddCommand(showUserCmd)
 	rootCmd.AddCommand(updateUserCmd)
+	rootCmd.AddCommand(crawlCmd)
+	crawlCmd.AddCommand(crawlListCmd)
+	crawlCmd.AddCommand(crawlDeleteCmd)
 
 	listenCmd.Flags().StringP("address", "a", dcfg.Server.Address, "Listen address")
 
