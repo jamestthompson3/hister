@@ -84,7 +84,7 @@
   let popupContent = $state('');
   let popupTemplate = $state('');
   let popupTemplateData = $state<any>(null);
-  let popupMeta = $state<Record<string, any> | null>(null);
+  let previewMeta = $state<Record<string, any> | null>(null);
   let actionsQuery = $state('');
   let actionsMessage: string | null = $state(null);
   let actionsError = $state(false);
@@ -113,7 +113,6 @@
   let panelTemplate = $state('');
   let panelTemplateData = $state<any>(null);
   let panelAdded = $state<number | null>(null);
-  let panelMeta = $state<Record<string, any> | null>(null);
   let panelLoading = $state(false);
   let isDesktop = $state(false);
   let panelOpen = $state(true);
@@ -312,7 +311,7 @@
     panelContent = '';
     panelTemplate = '';
     panelTemplateData = null;
-    panelMeta = null;
+    previewMeta = null;
     try {
       const resp = await apiFetch(`/preview?url=${encodeURIComponent(url)}`);
       if (!resp.ok) {
@@ -321,7 +320,7 @@
         const data = await resp.json();
         panelTitle = data.title || title;
         panelAdded = data.added ?? null;
-        panelMeta = data.meta ?? null;
+        previewMeta = data.meta ?? null;
         panelTemplate = data.template || '';
         panelTemplateData = panelTemplate === 'video' ? parseTemplateData(data.content) : null;
         panelContent =
@@ -349,21 +348,21 @@
       const resp = await apiFetch(`/preview?url=${encodeURIComponent(url)}`);
       if (!resp.ok) {
         popupTitle = 'Error';
-        popupMeta = null;
+        previewMeta = null;
         popupContent = `<p class="text-hister-rose">Failed to load readable content. Status: ${resp.status}</p>`;
         showPopup = true;
         return;
       }
       const data = await resp.json();
       popupTitle = data.title || title;
-      popupMeta = data.meta ?? null;
+      previewMeta = data.meta ?? null;
       popupTemplate = data.template || '';
       popupTemplateData = popupTemplate === 'video' ? parseTemplateData(data.content) : null;
       popupContent = popupTemplate === 'video' ? '' : data.content || '<p>No content available</p>';
       showPopup = true;
     } catch (err) {
       popupTitle = 'Error';
-      popupMeta = null;
+      previewMeta = null;
       popupContent = `<p class="text-hister-rose">Failed to parse response: ${err}</p>`;
       showPopup = true;
     }
@@ -735,20 +734,20 @@
     <Dialog.Header class="border-border-brand-muted border-b-[3px] pb-4">
       <Dialog.Title class="font-outfit text-text-brand text-lg font-bold">{popupTitle}</Dialog.Title
       >
-      {#if popupMeta?.author || popupMeta?.published || popupMeta?.type}
+      {#if previewMeta?.author || previewMeta?.published || previewMeta?.type}
         <div class="font-inter text-text-brand-muted mt-1 text-xs">
-          {#if popupMeta?.author}<span>{popupMeta.author}</span>{/if}
-          {#if popupMeta?.author && popupMeta?.published}<span class="mx-1">·</span>{/if}
-          {#if popupMeta?.published}<span>{formatMetaDate(popupMeta.published)}</span>{/if}
-          {#if (popupMeta?.author || popupMeta?.published) && popupMeta?.type}<span class="mx-1"
-              >·</span
+          {#if previewMeta?.author}<span>{previewMeta.author}</span>{/if}
+          {#if previewMeta?.author && previewMeta?.published}<span class="mx-1">·</span>{/if}
+          {#if previewMeta?.published}<span>{formatMetaDate(previewMeta.published)}</span>{/if}
+          {#if (previewMeta?.author || previewMeta?.published) && previewMeta?.type}<span
+              class="mx-1">·</span
             >{/if}
-          {#if popupMeta?.type}<span class="uppercase">{popupMeta.type}</span>{/if}
+          {#if previewMeta?.type}<span class="uppercase">{previewMeta.type}</span>{/if}
         </div>
       {/if}
-      {#if popupMeta?.description}
+      {#if previewMeta?.description}
         <p class="font-inter text-text-brand-secondary mt-1 line-clamp-3 text-sm">
-          {popupMeta.description}
+          {previewMeta.description}
         </p>
       {/if}
     </Dialog.Header>
@@ -758,16 +757,16 @@
       {:else}
         {@html popupContent}
       {/if}
-      {#if popupMeta?.jsonld}
+      {#if previewMeta?.jsonld}
         <details class="not-prose border-border-brand-muted mt-6 border-t pt-3">
           <summary
             class="font-inter text-text-brand-muted cursor-pointer text-xs tracking-wide uppercase"
           >
-            Extracted JSON-LD ({popupMeta.jsonld.length})
+            Extracted JSON-LD ({previewMeta.jsonld.length})
           </summary>
           <pre
             class="bg-card-surface-muted text-text-brand-secondary mt-2 overflow-x-auto rounded p-2 text-[11px] leading-snug">{JSON.stringify(
-              popupMeta.jsonld,
+              previewMeta.jsonld,
               null,
               2,
             )}</pre>
@@ -1325,16 +1324,17 @@
                 >
                   {panelTitle}
                 </h2>
-                {#if panelMeta?.author || panelMeta?.published || panelMeta?.type}
+                {#if previewMeta?.author || previewMeta?.published || previewMeta?.type}
                   <span class="font-inter text-text-brand-muted text-xs">
-                    {#if panelMeta?.author}<span>{panelMeta.author}</span>{/if}
-                    {#if panelMeta?.author && panelMeta?.published}<span class="mx-1">·</span>{/if}
-                    {#if panelMeta?.published}<span>{formatMetaDate(panelMeta.published)}</span
+                    {#if previewMeta?.author}<span>{previewMeta.author}</span>{/if}
+                    {#if previewMeta?.author && previewMeta?.published}<span class="mx-1">·</span
                       >{/if}
-                    {#if (panelMeta?.author || panelMeta?.published) && panelMeta?.type}<span
+                    {#if previewMeta?.published}<span>{formatMetaDate(previewMeta.published)}</span
+                      >{/if}
+                    {#if (previewMeta?.author || previewMeta?.published) && previewMeta?.type}<span
                         class="mx-1">·</span
                       >{/if}
-                    {#if panelMeta?.type}<span class="uppercase">{panelMeta.type}</span>{/if}
+                    {#if previewMeta?.type}<span class="uppercase">{previewMeta.type}</span>{/if}
                   </span>
                 {/if}
                 {#if panelAdded}
@@ -1343,9 +1343,9 @@
                     title={formatTimestamp(panelAdded)}>indexed {formatTimestamp(panelAdded)}</span
                   >
                 {/if}
-                {#if panelMeta?.description}
+                {#if previewMeta?.description}
                   <p class="font-inter text-text-brand-secondary mt-1 line-clamp-3 text-sm">
-                    {panelMeta.description}
+                    {previewMeta.description}
                   </p>
                 {/if}
               </div>
@@ -1370,16 +1370,16 @@
                 {:else}
                   {@html panelContent}
                 {/if}
-                {#if panelMeta?.jsonld}
+                {#if previewMeta?.jsonld}
                   <details class="not-prose border-border-brand-muted mt-6 border-t pt-3">
                     <summary
                       class="font-inter text-text-brand-muted cursor-pointer text-xs tracking-wide uppercase"
                     >
-                      Extracted JSON-LD ({panelMeta.jsonld.length})
+                      Extracted JSON-LD ({previewMeta.jsonld.length})
                     </summary>
                     <pre
                       class="bg-card-surface-muted text-text-brand-secondary mt-2 overflow-x-auto rounded p-2 text-[11px] leading-snug">{JSON.stringify(
-                        panelMeta.jsonld,
+                        previewMeta.jsonld,
                         null,
                         2,
                       )}</pre>
