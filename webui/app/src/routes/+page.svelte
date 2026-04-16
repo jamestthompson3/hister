@@ -81,6 +81,7 @@
   let dateTo = $state('');
   let showPopup = $state(false);
   let popupTitle = $state('');
+  let popupUrl = $state('');
   let popupContent = $state('');
   let popupTemplate = $state('');
   let popupTemplateData = $state<any>(null);
@@ -355,6 +356,7 @@
       }
       const data = await resp.json();
       popupTitle = data.title || title;
+      popupUrl = url;
       previewMeta = data.meta ?? null;
       popupTemplate = data.template || '';
       popupTemplateData = popupTemplate === 'video' ? parseTemplateData(data.content) : null;
@@ -732,7 +734,10 @@
     class="border-border-brand bg-card-surface max-h-[80vh] max-w-2xl overflow-auto rounded-none border-[3px] p-6 shadow-[6px_6px_0px_var(--hister-indigo)]"
   >
     <Dialog.Header class="border-border-brand-muted border-b-[3px] pb-4">
-      <Dialog.Title class="font-outfit text-text-brand text-lg font-bold">{popupTitle}</Dialog.Title
+      <Dialog.Title class="font-outfit text-text-brand text-lg font-bold"
+        ><a href={popupUrl} target="_blank" rel="noopener noreferrer" class="hover:underline"
+          >{popupTitle}</a
+        ></Dialog.Title
       >
       {#if previewMeta?.author || previewMeta?.published || previewMeta?.type}
         <div class="font-inter text-text-brand-muted mt-1 text-xs">
@@ -1322,7 +1327,12 @@
                 <h2
                   class="font-outfit text-text-brand line-clamp-2 text-lg leading-snug font-bold md:text-3xl"
                 >
-                  {panelTitle}
+                  <a
+                    href={panelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hover:underline">{panelTitle}</a
+                  >
                 </h2>
                 {#if previewMeta?.author || previewMeta?.published || previewMeta?.type}
                   <span class="font-inter text-text-brand-muted text-xs">
