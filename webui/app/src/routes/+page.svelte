@@ -756,7 +756,9 @@
         </p>
       {/if}
     </Dialog.Header>
-    <div class="font-inter text-text-brand-secondary prose max-w-none text-sm">
+    <div
+      class="font-inter text-text-brand-secondary prose dark:prose-invert prose-a:text-hister-teal max-w-none text-sm"
+    >
       {#if popupTemplate === 'video' && popupTemplateData}
         <VideoPreview data={popupTemplateData} />
       {:else}
