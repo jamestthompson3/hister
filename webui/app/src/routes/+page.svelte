@@ -837,7 +837,7 @@
                     }}
                   >
                     <Eye class="size-3" />
-                    Reader
+                    Preview
                   </Button>
                 {/if}
                 <DropdownMenu.Root>
@@ -1249,7 +1249,7 @@
       <!-- Desktop-only readability panel (right column) -->
       {#if lastResults && panelOpen && isDesktop}
         <div
-          class="border-border-brand bg-card-surface flex w-[45%] shrink-0 flex-col overflow-hidden border-l-[3px]"
+          class="border-border-brand bg-card-surface flex flex-1 shrink-0 flex-col overflow-hidden border-l-[3px]"
         >
           {#if panelLoading}
             <div
@@ -1301,7 +1301,7 @@
             </div>
             <ScrollArea class="min-h-0 flex-1">
               <div
-                class="font-inter text-text-brand-secondary prose dark:prose-invert prose-a:text-hister-teal max-w-none p-4 text-sm"
+                class="font-inter text-text-brand-secondary prose dark:prose-invert prose-a:text-hister-teal w-full max-w-[60em] p-4 text-sm"
               >
                 {#if panelTemplate === 'video' && panelTemplateData}
                   <VideoPreview data={panelTemplateData} />
