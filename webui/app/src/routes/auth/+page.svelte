@@ -18,7 +18,7 @@
       .then((r) => r.json())
       .then((cfg) => {
         authMode = cfg.authMode ?? 'token';
-        if (authMode === 'none') {
+        if (authMode === 'none' || cfg.authenticated) {
           window.location.href = '/';
         }
       })

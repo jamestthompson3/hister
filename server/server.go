@@ -585,14 +585,29 @@ func serveConfig(c *webContext) {
 		OpenResultsOnNewTab bool              `json:"openResultsOnNewTab"`
 		Hotkeys             map[string]string `json:"hotkeys"`
 		AuthMode            string            `json:"authMode"`
+		Authenticated       bool              `json:"authenticated"`
 		Username            string            `json:"username,omitempty"`
 		UserID              uint              `json:"userId,omitempty"`
 	}
 	authMode := "none"
+	authenticated := true
 	if c.Config.App.UserHandling {
 		authMode = "user"
+		authenticated = c.UserID > 0
 	} else if c.Config.App.AccessToken != "" {
 		authMode = "token"
+		// Check whether this request carries a valid token via session or header.
+		if session, err := sessionStore.Get(c.Request, storeName); err == nil && session != nil {
+			if t, ok := session.Values["access_token"].(string); ok && t == c.Config.App.AccessToken {
+				authenticated = true
+			} else if c.Request.Header.Get("X-Access-Token") == c.Config.App.AccessToken {
+				authenticated = true
+			} else {
+				authenticated = false
+			}
+		} else {
+			authenticated = c.Request.Header.Get("X-Access-Token") == c.Config.App.AccessToken
+		}
 	}
 	hotkeys := c.Config.Hotkeys.Web
 	if hotkeys == nil {
@@ -606,6 +621,7 @@ func serveConfig(c *webContext) {
 		OpenResultsOnNewTab: c.Config.App.OpenResultsOnNewTab,
 		Hotkeys:             hotkeys,
 		AuthMode:            authMode,
+		Authenticated:       authenticated,
 		Username:            c.Username,
 		UserID:              c.UserID,
 	})
